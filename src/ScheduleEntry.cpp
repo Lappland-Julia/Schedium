@@ -24,7 +24,8 @@ void ScheduleEntry::setPlaceId(const int &new_place_id) {
     this->placeId = new_place_id;
 }
 
-ScheduleEntry::ScheduleEntry(const std::string &name, const std::chrono::sys_seconds &timestamp, const std::chrono::seconds &duration, const int &group_id, const int &place_id) {
+ScheduleEntry::ScheduleEntry(const std::string &name, const std::chrono::sys_seconds &timestamp,
+                             const std::chrono::seconds &duration, const int &group_id, const int &place_id) {
     this->setId(67);
     this->setName(name);
     this->setTimestamp(timestamp);

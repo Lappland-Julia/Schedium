@@ -12,6 +12,8 @@ private:
     std::chrono::sys_seconds timestamp;
     int groupId = 0;
     int placeId = 0;
+    bool owned = false;
+    int managerId = -1;
 
 public:
 
@@ -32,6 +34,11 @@ public:
 
     int getPlaceId() const { return this->placeId; }
     void setPlaceId(const int &new_place_id);
+
+    void own(const int &manager_id) { this->owned = true; this->managerId = manager_id; }
+
+    bool isOwned() const {return this->owned; }
+    int ownerId() const {return this->managerId;}
 
     ScheduleEntry (const std::string &name, const std::chrono::sys_seconds &timestamp, const std::chrono::seconds &duration, const int &group_id, const int &place_id);
 
