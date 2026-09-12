@@ -19,22 +19,22 @@ private:
 public:
 
     int getId() const { return this->id; }
-    void setId(const int &new_id);
+    void set_id(const int &new_id);
 
     std::string getName() const { return this->name; }
-    void setName(const std::string &new_name);
+    void set_name(const std::string &new_name);
 
     std::chrono::sys_seconds getTimestamp() const { return this->timestamp; }
-    void setTimestamp(const std::chrono::sys_seconds &new_timestamp);
+    void set_timestamp(const std::chrono::sys_seconds &new_timestamp);
 
     std::chrono::seconds getDuration() const { return this->duration; };
-    void setDuration(const std::chrono::seconds &new_duration);
+    void set_duration(const std::chrono::seconds &new_duration);
 
     int getGroupId() const { return this->groupId; }
-    void setGroupId(const int &new_group_id);
+    void set_group_id(const int &new_group_id);
 
     int getPlaceId() const { return this->placeId; }
-    void setPlaceId(const int &new_place_id);
+    void set_place_id(const int &new_place_id);
 
     void own(const int &manager_id) { this->owned = true; this->managerId = manager_id; }
 

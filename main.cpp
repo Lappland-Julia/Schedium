@@ -19,23 +19,23 @@ int main() {
     auto second_lesson = ScheduleEntry("Lesson 2", date1, time1, 10, 1);
     auto third_lesson = ScheduleEntry("Lesson 3", date1, time1, 10, 1);
 
-    first_lesson.setId(52);
+    first_lesson.set_id(52);
 
     auto manager = ScheduleManager();
-    manager.addScheduleEntry(first_lesson);
-    manager.addScheduleEntry(second_lesson);
-    manager.addScheduleEntry(third_lesson);
+    manager.add_schedule_entry(first_lesson);
+    manager.add_schedule_entry(second_lesson);
+    manager.add_schedule_entry(third_lesson);
 
     std::cout << "Group ID: " << first_lesson.getId() << "; Group Name: " << first_lesson.getName() << "\n";
-    std::cout << "ID 52 match: " << manager.idExists(52) << "; ID 53 match: " << manager.idExists(53) << "\n";
-    std::cout << "Lesson 1 match: " << manager.nameExists("Lesson 1") << "; Invalid name match: " << manager.nameExists("Invalid name") << "\n";
-    std::cout << "Lesson 1 owner (by id): " << manager.getEntryById(52).getId() << "\n";
-    std::cout << "Lesson 2 owner (by name): " << manager.getEntryByName("Lesson 2").getId() << "\n";
-    std::cout << "Lesson 3 owner (by name): " << manager.getEntryByName("Lesson 3").getId() << "\n";
-    std::cout << "Random ID: " << generateId() << "\n\n";
+    std::cout << "ID 52 match: " << manager.id_exists(52) << "; ID 53 match: " << manager.id_exists(53) << "\n";
+    std::cout << "Lesson 1 match: " << manager.name_exists("Lesson 1") << "; Invalid name match: " << manager.name_exists("Invalid name") << "\n";
+    std::cout << "Lesson 1 owner (by id): " << manager.get_entry_by_id(52).getId() << "\n";
+    std::cout << "Lesson 2 owner (by name): " << manager.get_entry_by_name("Lesson 2").getId() << "\n";
+    std::cout << "Lesson 3 owner (by name): " << manager.get_entry_by_name("Lesson 3").getId() << "\n";
+    std::cout << "Random ID: " << generate_id() << "\n\n";
     std::cout << "SCHEDULE ENTRY:\n";
-    std::cout << "Manager ID: " << std::to_string(manager.getId()) << "\n\nLessons: \n";
-    for (ScheduleEntry entry: manager.getSchedule()) {
+    std::cout << "Manager ID: " << std::to_string(manager.get_id()) << "\n\nLessons: \n";
+    for (ScheduleEntry entry: manager.get_schedule()) {
         std::cout << "ID: " << std::to_string(entry.getId()) << "; Name: " << entry.getName() << "\n";
     }
 
