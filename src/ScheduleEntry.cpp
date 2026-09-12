@@ -1,36 +1,36 @@
 #include "ScheduleEntry.h"
 #include "Generators.h"
 
-void ScheduleEntry::setId(const int &new_id) {
+void ScheduleEntry::set_id(const int &new_id) {
     this->id = new_id;
 }
 
-void ScheduleEntry::setName(const std::string &new_name) {
+void ScheduleEntry::set_name(const std::string &new_name) {
     this->name = new_name;
 }
 
-void ScheduleEntry::setTimestamp(const std::chrono::sys_seconds &new_timestamp) {
+void ScheduleEntry::set_timestamp(const std::chrono::sys_seconds &new_timestamp) {
     this->timestamp = new_timestamp;
 }
 
-void ScheduleEntry::setDuration(const std::chrono::seconds &new_duration) {
+void ScheduleEntry::set_duration(const std::chrono::seconds &new_duration) {
     this->duration = new_duration;
 }
 
-void ScheduleEntry::setGroupId(const int &new_group_id) {
+void ScheduleEntry::set_group_id(const int &new_group_id) {
     this->groupId = new_group_id;
 }
 
-void ScheduleEntry::setPlaceId(const int &new_place_id) {
+void ScheduleEntry::set_place_id(const int &new_place_id) {
     this->placeId = new_place_id;
 }
 
 ScheduleEntry::ScheduleEntry(const std::string &name, const std::chrono::sys_seconds &timestamp,
                              const std::chrono::seconds &duration, const int &group_id, const int &place_id) {
-    this->setId(generateId());
-    this->setName(name);
-    this->setTimestamp(timestamp);
-    this->setDuration(duration);
-    this->setGroupId(group_id);
-    this->setPlaceId(place_id);
+    this->set_id(generate_id());
+    this->set_name(name);
+    this->set_timestamp(timestamp);
+    this->set_duration(duration);
+    this->set_group_id(group_id);
+    this->set_place_id(place_id);
 }
