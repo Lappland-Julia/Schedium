@@ -1,4 +1,5 @@
 #include "ScheduleEntry.h"
+#include "Generators.h"
 
 void ScheduleEntry::setId(const int &new_id) {
     this->id = new_id;
@@ -26,7 +27,7 @@ void ScheduleEntry::setPlaceId(const int &new_place_id) {
 
 ScheduleEntry::ScheduleEntry(const std::string &name, const std::chrono::sys_seconds &timestamp,
                              const std::chrono::seconds &duration, const int &group_id, const int &place_id) {
-    this->setId(67);
+    this->setId(generateId());
     this->setName(name);
     this->setTimestamp(timestamp);
     this->setDuration(duration);

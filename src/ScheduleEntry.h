@@ -1,6 +1,7 @@
 #ifndef ALLOC_SCHEDULE_H
 #define ALLOC_SCHEDULE_H
 #include <chrono>
+#include "Generators.h"
 #include <string>
 
 

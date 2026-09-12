@@ -2,11 +2,12 @@
 #define ALLOC_SCHEDULEMANAGER_H
 #include <vector>
 #include "ScheduleEntry.h"
+#include "Generators.h"
 
 
 class ScheduleManager {
 private:
-    int id = 0;
+    int id = generateId();
     std::string name = "Schedule manager";
     std::vector<ScheduleEntry> scheduleVec;
 
@@ -22,13 +23,15 @@ public:
     void addScheduleEntry(ScheduleEntry &new_schedule_entry);
     void setSchedule(const std::vector<ScheduleEntry> &new_schedule_vec);
 
+    void setSchedule(const std::string &name, const std::chrono::sys_seconds &timestamp, const std::chrono::seconds &duration, const int &group_id, const int &place_id);
+
     bool idExists(const int &target_id) const;
     bool nameExists(const std::string &target_name) const;
 
     ScheduleEntry &getEntryById(const int id);
-    ScheduleEntry &getEntryByName(const std::string name);
+    ScheduleEntry &getEntryByName(const std::string &name);
 
-    ScheduleManager () { this->scheduleVec = std::vector<ScheduleEntry>{}; }
+    ScheduleManager ();
     explicit ScheduleManager (const std::vector<ScheduleEntry> &schedule_entries) { this->setSchedule(schedule_entries); }
 };
 
