@@ -4,6 +4,10 @@ ScheduleManager::ScheduleManager() {
     this->scheduleVec = std::vector<ScheduleEntry>{};
 }
 
+bool ScheduleManager::validate() {
+    return true;
+}
+
 void ScheduleManager::setId(const int &new_id) {
     const int prev_id = this->getId();
     for (auto &schedule_entry: this->scheduleVec) {

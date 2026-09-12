@@ -8,4 +8,6 @@ add_executable(Schedium main.cpp
         src/ScheduleEntry.h
         src/ScheduleManager.cpp
         src/ScheduleManager.h
-        src/Generators.h)
+        src/Generators.h
+        src/Validator.cpp
+        src/Validator.h)

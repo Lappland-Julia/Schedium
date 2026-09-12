@@ -33,6 +33,8 @@ public:
 
     ScheduleManager ();
     explicit ScheduleManager (const std::vector<ScheduleEntry> &schedule_entries) { this->setSchedule(schedule_entries); }
+
+    static bool validate ();
 };
 
 
