@@ -4,6 +4,7 @@
 #include "src/ScheduleEntry.h"
 #include "src/ScheduleManager.h"
 #include "src/Generators.h"
+#include "src/Validator.h"
 
 int main() {
 
@@ -38,6 +39,11 @@ int main() {
     for (ScheduleEntry entry: manager.get_schedule()) {
         std::cout << "ID: " << std::to_string(entry.getId()) << "; Name: " << entry.getName() << "\n";
     }
+    std::cout << "\nVALIDATORS:\n";
+    auto val = Validator();
+    val.add_manager(manager);
+    val.set_validating_power("EASY");
+    std::cout << "Validating power: " << val.get_validating_power() << "\n";
 
     return 0;
 }
