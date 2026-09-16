@@ -26,6 +26,8 @@ public:
     Validator();
     explicit Validator(const ScheduleManager &Manager);
     explicit Validator(const std::vector<ScheduleManager> &Managers);
+
+    bool is_valid() const;
 };
 
 

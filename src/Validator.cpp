@@ -1,5 +1,6 @@
 #include "Validator.h"
 
+#include <set>
 #include <stdexcept>
 
 std::string Validator::get_validating_level() const {
@@ -53,4 +54,25 @@ Validator::Validator(const ScheduleManager &Manager) {
 
 Validator::Validator(const std::vector<ScheduleManager> &Managers) {
     this->add_managers(Managers);
+}
+
+bool Validator::is_valid() const {
+    if (this->managers.size() == 0) {
+        return true;
+    }
+    else {
+        std::set<std::chrono::sys_seconds> entry_timestamps {};
+        for (auto manager: this->managers) {
+            int counter = 0;
+            entry_timestamps.clear();
+            for (auto entry: manager.get_schedule_entries()) {
+                entry_timestamps.insert(entry.getTimestamp());
+                counter++;
+            }
+            if (counter != this->managers.size()) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

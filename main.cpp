@@ -45,5 +45,7 @@ int main() {
     val.set_validating_level("HARD");
     std::cout << "Validating power: " << val.get_validating_level() << "\n";
 
+    std::cout << "\nValid schedule: "<< val.is_valid() <<"\n";
+
     return 0;
 }
