@@ -2,23 +2,34 @@
 
 #include <stdexcept>
 
-std::string Validator::get_validating_power() const {
-    return this->VALIDATING_TYPES[this->VALIDATING_TYPES.size() - this->validating_power];
+std::string Validator::get_validating_level() const {
+    switch (this->validating_level) {
+        case 1:
+            return "EASY";
+            break;
+        case 2:
+            return "MEDIUM";
+            break;
+        case 3:
+            return "HARD";
+            break;
+        default:
+            return "UNKNOWN";
+    }
 }
 
-void Validator::set_validating_power(const std::string &new_validating_power) {
-    int parsed_value = this->VALIDATING_TYPES.size();
-    for (auto power: this->VALIDATING_TYPES) {
-        if (new_validating_power == power) {
-            this->validating_power = parsed_value;
-            return;
-        }
-        else {
-            parsed_value--;
-        }
+void Validator::set_validating_level(const std::string &new_validating_level) {
+    if (new_validating_level == "EASY") {
+        this->validating_level = 1;
     }
-    if (parsed_value == 0) {
-        throw std::runtime_error(new_validating_power +" is not a valid type of validator. Check Validator.get_validating_types()");
+    else if (new_validating_level == "MEDIUM") {
+        this->validating_level = 2;
+    }
+    else if (new_validating_level == "HARD") {
+        this->validating_level = 3;
+    }
+    else {
+        throw std::invalid_argument("Invalid validating level");
     }
 }
 

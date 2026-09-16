@@ -42,8 +42,8 @@ int main() {
     std::cout << "\nVALIDATORS:\n";
     auto val = Validator();
     val.add_manager(manager);
-    val.set_validating_power("EASY");
-    std::cout << "Validating power: " << val.get_validating_power() << "\n";
+    val.set_validating_level("HARD");
+    std::cout << "Validating power: " << val.get_validating_level() << "\n";
 
     return 0;
 }
