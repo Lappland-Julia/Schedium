@@ -10,7 +10,7 @@ void ScheduleEntry::set_name(const std::string &new_name) {
 }
 
 void ScheduleEntry::set_timestamp(const std::chrono::sys_seconds &new_timestamp) {
-    this->timestamp = new_timestamp;
+    this->start_time = new_timestamp;
 }
 
 void ScheduleEntry::set_duration(const std::chrono::seconds &new_duration) {
@@ -18,11 +18,11 @@ void ScheduleEntry::set_duration(const std::chrono::seconds &new_duration) {
 }
 
 void ScheduleEntry::set_group_id(const int &new_group_id) {
-    this->groupId = new_group_id;
+    this->group_id = new_group_id;
 }
 
 void ScheduleEntry::set_place_id(const int &new_place_id) {
-    this->placeId = new_place_id;
+    this->place_id = new_place_id;
 }
 
 ScheduleEntry::ScheduleEntry(const std::string &name, const std::chrono::sys_seconds &timestamp,

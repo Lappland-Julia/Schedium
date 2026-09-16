@@ -27,17 +27,17 @@ int main() {
     manager.add_schedule_entry(second_lesson);
     manager.add_schedule_entry(third_lesson);
 
-    std::cout << "Group ID: " << first_lesson.getId() << "; Group Name: " << first_lesson.getName() << "\n";
+    std::cout << "Group ID: " << first_lesson.get_id() << "; Group Name: " << first_lesson.get_name() << "\n";
     std::cout << "ID 52 match: " << manager.id_exists(52) << "; ID 53 match: " << manager.id_exists(53) << "\n";
     std::cout << "Lesson 1 match: " << manager.name_exists("Lesson 1") << "; Invalid name match: " << manager.name_exists("Invalid name") << "\n";
-    std::cout << "Lesson 1 owner (by id): " << manager.get_entry_by_id(52).getId() << "\n";
-    std::cout << "Lesson 2 owner (by name): " << manager.get_entry_by_name("Lesson 2").getId() << "\n";
-    std::cout << "Lesson 3 owner (by name): " << manager.get_entry_by_name("Lesson 3").getId() << "\n";
+    std::cout << "Lesson 1 owner (by id): " << manager.get_entry_by_id(52).get_id() << "\n";
+    std::cout << "Lesson 2 owner (by name): " << manager.get_entry_by_name("Lesson 2").get_id() << "\n";
+    std::cout << "Lesson 3 owner (by name): " << manager.get_entry_by_name("Lesson 3").get_id() << "\n";
     std::cout << "Random ID: " << generate_id() << "\n\n";
     std::cout << "SCHEDULE ENTRY:\n";
     std::cout << "Manager ID: " << std::to_string(manager.get_id()) << "\n\nLessons: \n";
     for (ScheduleEntry entry: manager.get_schedule()) {
-        std::cout << "ID: " << std::to_string(entry.getId()) << "; Name: " << entry.getName() << "\n";
+        std::cout << "ID: " << std::to_string(entry.get_id()) << "; Name: " << entry.get_name() << "\n";
     }
     std::cout << "\nVALIDATORS:\n";
     auto val = Validator();

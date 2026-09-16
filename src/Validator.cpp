@@ -66,7 +66,7 @@ bool Validator::is_valid() const {
             int counter = 0;
             entry_timestamps.clear();
             for (auto entry: manager.get_schedule_entries()) {
-                entry_timestamps.insert(entry.getTimestamp());
+                entry_timestamps.insert(entry.get_timestamp());
                 counter++;
             }
             if (counter != this->managers.size()) {
