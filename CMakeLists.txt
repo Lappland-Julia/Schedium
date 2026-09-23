@@ -10,4 +10,6 @@ add_executable(Schedium main.cpp
         src/ScheduleManager.h
         src/Generators.h
         src/Validator.cpp
-        src/Validator.h)
+        src/Validator.h
+        benchmarks/ValidatorChecker.cpp
+        benchmarks/ValidatorChecker.h)

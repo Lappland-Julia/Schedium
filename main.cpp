@@ -5,6 +5,7 @@
 #include "src/ScheduleManager.h"
 #include "src/Generators.h"
 #include "src/Validator.h"
+#include "benchmarks/ValidatorChecker.h"
 
 int main() {
 
@@ -46,6 +47,14 @@ int main() {
     std::cout << "Validating power: " << val.get_validating_level() << "\n";
 
     std::cout << "\nValid schedule: "<< val.is_valid() <<"\n";
+
+    auto vc = ValidatorChecker();
+    std::cout << "Memory usage (before): " << vc.memory_dump() << "\n";
+    for (int i = 0; i < 10000; i++) {
+        new ScheduleEntry("Memory Test", date1, time1, 10, 1);
+    }
+    std::cout << "Memory usage (after): " << vc.memory_dump() << "\n";
+    std::cout << "Peak memory usage: " << vc.memory_dump() << "\n";
 
     return 0;
 }
