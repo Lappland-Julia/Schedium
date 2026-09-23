@@ -23,7 +23,7 @@ public:
     void add_schedule_entry(ScheduleEntry &new_schedule_entry);
     void set_schedule(const std::vector<ScheduleEntry> &new_schedule_vec);
 
-    void set_schedule(const std::string &name, const std::chrono::sys_seconds &timestamp, const std::chrono::seconds &duration, const int &group_id, const int &place_id);
+    void set_schedule(const std::string &name, const std::chrono::sys_seconds &timestamp, const std::chrono::minutes &duration, const int &group_id, const int &place_id);
     std::vector<ScheduleEntry> get_schedule_entries() const { return this->schedule_vec; }
 
     bool id_exists(const int &target_id) const;

@@ -13,7 +13,10 @@ void ScheduleEntry::set_timestamp(const std::chrono::sys_seconds &new_timestamp)
     this->start_time = new_timestamp;
 }
 
-void ScheduleEntry::set_duration(const std::chrono::seconds &new_duration) {
+void ScheduleEntry::set_duration(const std::chrono::minutes &new_duration) {
+    if (new_duration > this->MAX_DURATION_TIME) {
+        throw std::invalid_argument("\"" + this->name + "\" entry: duration is greater than maximum allowed duration ("+std::to_string(MAX_DURATION)+" minutes)");
+    }
     this->duration = new_duration;
 }
 
@@ -26,7 +29,7 @@ void ScheduleEntry::set_place_id(const int &new_place_id) {
 }
 
 ScheduleEntry::ScheduleEntry(const std::string &name, const std::chrono::sys_seconds &timestamp,
-                             const std::chrono::seconds &duration, const int &group_id, const int &place_id) {
+                             const std::chrono::minutes &duration, const int &group_id, const int &place_id) {
     this->set_id(generate_id());
     this->set_name(name);
     this->set_timestamp(timestamp);

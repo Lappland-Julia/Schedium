@@ -2,6 +2,8 @@
 #define SCHEDIUM_VALIDATOR_H
 #include <vector>
 #include <string>
+#include <map>
+#include <chrono>
 
 #include "ScheduleManager.h"
 
@@ -12,6 +14,8 @@ private:
     int validating_level = 2;
     std::vector<ScheduleManager> managers = {};
     enum class VALIDATING_TYPES: int { HARD = 3, MEDIUM = 2, EASY = 1 };
+
+    std::map<int, std::vector<std::pair<std::chrono::sys_seconds, std::chrono::minutes>>> get_schedule_entries() const;
 public:
 
     int get_gap_score() const { return this->gap_score; }
