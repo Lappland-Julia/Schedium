@@ -1,7 +1,7 @@
 #include "Validator.h"
 
 #include <map>
-#include <set>
+#include <algorithm>
 #include <ranges>
 #include <stdexcept>
 
@@ -77,42 +77,33 @@ Validator::Validator(const std::vector<ScheduleManager> &Managers) {
 }
 
 bool Validator::is_valid() const {
-    if (this->managers.size() == 0) {
+    if (managers.empty()) {
         return true;
     }
-    else {
-        for (std::map<int, std::vector<std::pair<std::chrono::sys_seconds, std::chrono::minutes>>> schedule_entries = this->get_schedule_entries(); auto &timestamp_entries: schedule_entries | std::views::values) {
-            for (auto& target_timestamp: timestamp_entries) {
-                bool already_matched = false;
-                for (auto &matching_timestamp: timestamp_entries) {
-                    // -1 - before, 0 - match, 1 - after
-                    if (target_timestamp == matching_timestamp) {
-                        if (already_matched == true) {
-                            return false;
-                        }
-                        already_matched = true;
-                    }
-                    else {
-                        std::set<std::chrono::sys_seconds> timestamp_set {};
-                        int counter = 0;
-                        std::chrono::seconds add_time {};
-                        for (int add = 0; add < target_timestamp.second.count(); add++) {
-                            add_time = std::chrono::seconds(60*add);
-                            timestamp_set.insert(target_timestamp.first + add_time);
-                            counter++;
-                        }
-                        for (int add = 0; add < matching_timestamp.second.count(); add++) {
-                            add_time = std::chrono::seconds(60*add);
-                            timestamp_set.insert(matching_timestamp.first + add_time);
-                            counter++;
-                        }
-                        if (timestamp_set.size() != counter) {
-                            return false;
-                        }
-                    }
-                }
+
+    auto schedule_entries = get_schedule_entries();
+
+    for (auto& entries : schedule_entries | std::views::values) {
+        std::ranges::sort(
+            entries,
+            {},
+            [](const auto& entry) {
+                return entry.first;
+            }
+        );
+
+        for (std::size_t i = 1; i < entries.size(); ++i) {
+            const auto& previous = entries[i - 1];
+            const auto& current = entries[i];
+
+            const auto previous_end =
+                previous.first + previous.second;
+
+            if (current.first < previous_end) {
+                return false;
             }
         }
-        return true;
     }
+
+    return true;
 }
