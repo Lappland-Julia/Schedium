@@ -5,7 +5,24 @@
 #include "src/ScheduleManager.h"
 #include "src/Generators.h"
 #include "src/Validator.h"
-#include "benchmarks/ValidatorChecker.h"
+#include "benchmarks/Benchmark.h"
+
+void create_pool() {
+    const std::chrono::sys_seconds date1 = std::chrono::sys_days{std::chrono::year{2027}/std::chrono::January/25};
+    const std::chrono::minutes time1 {100};
+    auto b = Benchmark();
+    std::cout << "Memory usage (before): " << b.private_memory() << " KB\n";
+    std::vector<ScheduleEntry*> values {};
+    for (int i = 0; i < 10000; i++) {
+        values.push_back(new ScheduleEntry("Memory Test", date1, time1, 10, 1));
+    }
+    std::cout << "Memory usage (after): " << b.private_memory() << " KB\n";
+    for (auto elem: values) {
+        delete elem;
+    }
+    std::cout << "Memory usage (delete): " << b.private_memory() << " KB\n";
+    std::cout << "Peak memory usage: " << b.peak_private_memory() << " KB\n";
+}
 
 int main() {
 
@@ -48,13 +65,8 @@ int main() {
 
     std::cout << "\nValid schedule: "<< val.is_valid() <<"\n";
 
-    auto vc = ValidatorChecker();
-    std::cout << "Memory usage (before): " << vc.memory_dump() << "\n";
-    for (int i = 0; i < 10000; i++) {
-        new ScheduleEntry("Memory Test", date1, time1, 10, 1);
-    }
-    std::cout << "Memory usage (after): " << vc.memory_dump() << "\n";
-    std::cout << "Peak memory usage: " << vc.memory_dump() << "\n";
+    auto b = Benchmark();
+    std::cout << "Work time: " << b.time_check(create_pool) << " ms\n";
 
     return 0;
 }
