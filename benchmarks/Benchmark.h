@@ -7,19 +7,27 @@
 
 
 class Benchmark {
+private:
+    std::chrono::steady_clock::time_point start_;
+    std::chrono::steady_clock::time_point end_;
+
+    double start_memo = -1;
+    double end_memo = -1;
 
 public:
     static double private_memory();
     static double peak_private_memory();
 
-    template <typename F>
-    static double time_check(F function) {
-        const auto before = std::chrono::steady_clock::now();
-        function();
-        const auto after = std::chrono::steady_clock::now();
-        const std::chrono::duration<double, std::milli> duration = after - before;
-        return duration.count();
-    }
+    void get_start_time();
+    void get_end_time();
+    double get_delta_time();
+
+    void get_start_memo();
+    void get_end_memo();
+    double get_delta_memo() const;
+
+    static double to_kb(const double val) { return val / 1024.0; }
+    static double to_mb(const double val) { return val / 1024.0 / 1024.0; }
 };
 
 
