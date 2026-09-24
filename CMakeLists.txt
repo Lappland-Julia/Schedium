@@ -1,13 +1,41 @@
 cmake_minimum_required(VERSION 4.2)
-project(Schedium)
 
-set(CMAKE_CXX_STANDARD 26)
+project(Schedium LANGUAGES CXX)
 
-add_executable(Schedium main.cpp
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+add_library(Schedium
         src/ScheduleEntry.cpp
-        src/ScheduleEntry.h
         src/ScheduleManager.cpp
-        src/ScheduleManager.h
-        src/Generators.h
         src/Validator.cpp
-        src/Validator.h)
+        src/Schedium.h
+)
+
+target_include_directories(Schedium
+        PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+add_executable(SchediumBenchmarks
+        benchmarks/main.cpp
+        benchmarks/Benchmark.cpp
+)
+
+target_include_directories(SchediumBenchmarks
+        PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/benchmarks
+)
+
+target_link_libraries(SchediumBenchmarks
+        PRIVATE
+        Schedium
+)
+
+if (WIN32)
+    target_link_libraries(SchediumBenchmarks
+            PRIVATE
+            Psapi
+    )
+endif()
