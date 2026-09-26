@@ -65,8 +65,5 @@ int main() {
 
     std::cout << "\nValid schedule: "<< val.is_valid() <<"\n";
 
-    auto b = Benchmark();
-    std::cout << "Work time: " << b.time_check(create_pool) << " ms\n";
-
     return 0;
 }

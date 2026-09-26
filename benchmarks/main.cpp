@@ -1,14 +1,16 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <thread>
+#include <future>
 #include <Schedium.h>
 
 #include "Benchmark.h"
 
-constexpr int DEFAULT_TEST_VALUE = 10'000;
+constexpr int DEFAULT_TEST_VALUE = 25'000;
 constexpr int DEFAULT_TESTS = 10;
 
-static std::vector<double> test() {
+static std::vector<double> test_create() {
     std::vector<double> result {};
 
     auto benchmark = Benchmark();
@@ -43,7 +45,7 @@ static std::vector<double> test() {
 
     result.push_back(benchmark.get_delta_time());
     result.push_back(benchmark.to_mb(benchmark.private_memory()));
-    result.push_back(benchmark.to_kb(benchmark.get_delta_memo()));
+    result.push_back(benchmark.to_mb(benchmark.get_delta_memo()));
 
     for (auto i : data) {
         delete i;
@@ -95,11 +97,11 @@ static std::vector<double> test_validator() {
 
     auto manager = ScheduleManager();
 
-    for (auto i : data) {
-        manager.add_schedule_entry(*i);
+    for (const auto entry : data) {
+        manager.add_schedule_entry(*entry);
     }
 
-    auto v = Validator(manager);
+    const auto v = Validator(manager);
     bool valid = v.is_valid();
 
     benchmark.get_end_time();
@@ -107,7 +109,7 @@ static std::vector<double> test_validator() {
 
     result.push_back(benchmark.get_delta_time());
     result.push_back(benchmark.to_mb(benchmark.private_memory()));
-    result.push_back(benchmark.to_kb(benchmark.get_delta_memo()));
+    result.push_back(benchmark.to_mb(benchmark.get_delta_memo()));
 
     for (auto i : data) {
         delete i;
@@ -116,15 +118,9 @@ static std::vector<double> test_validator() {
     return result;
 }
 
-int main() {
-    std::cout << "\t\tCREATING "
-              << DEFAULT_TEST_VALUE
-              << " ENTRIES\n";
-
-    auto benchmark = Benchmark();
-
-    benchmark.get_start_memo();
-    benchmark.get_start_time();
+static std::vector<std::string> test_create_entries() {
+    std::vector<std::string> output_result {};
+    output_result.push_back("\t\tCREATING "+std::to_string(DEFAULT_TEST_VALUE)+" ENTRIES\n");
 
     double avg_start_memo = 0;
     double avg_delta_time = 0;
@@ -132,7 +128,7 @@ int main() {
     double avg_delta_memo = 0;
 
     for (int i = 0; i < DEFAULT_TESTS; i++) {
-        std::vector<double> result = test();
+        std::vector<double> result = test_create();
 
         avg_start_memo += result[0];
         avg_delta_time += result[1];
@@ -145,33 +141,25 @@ int main() {
     avg_end_memo /= DEFAULT_TESTS;
     avg_delta_memo /= DEFAULT_TESTS;
 
-    std::cout << "\n\tAverage data:\n";
+    output_result.push_back("\n\tAverage data:\n");
 
-    std::cout << "Average memory: "
-              << avg_start_memo
-              << " MB ("
-              << (avg_delta_memo >= 0 ? "+" : "")
-              << avg_delta_memo
-              << " KB)\n";
+    output_result.push_back("Average memory: "+std::to_string(avg_start_memo)+" MB (+"+std::to_string(avg_delta_memo)+" MB)\n");
 
-    std::cout << "Average delta time: "
-              << avg_delta_time
-              << " ms\n";
+    output_result.push_back("Average delta time: "+std::to_string(avg_delta_time)+" ms\n");
 
     const std::vector<double> normalized = normalize_test({
         avg_delta_time
     });
 
-    std::cout << "\n\tNormalized per entry:\n";
+    output_result.push_back("\n\tNormalized per entry:\n");
 
-    std::cout << "Delta time: "
-              << normalized[0] * 1000.0
-              << " us/entry\n";
+    output_result.push_back("Delta time: "+std::to_string(normalized[0] * 1000.0)+" us/entry\n");
+    return output_result;
+}
 
-
-    std::cout << "\n\n\t\tVALIDATING "
-              << DEFAULT_TEST_VALUE
-              << " ENTRIES\n";
+static std::vector<std::string> test_validate_entries() {
+    std::vector<std::string> output_result {};
+    output_result.push_back("\n\n\t\tVALIDATING "+std::to_string(DEFAULT_TEST_VALUE)+" ENTRIES\n");
 
     double validator_avg_start_memo = 0;
     double validator_avg_delta_time = 0;
@@ -192,30 +180,21 @@ int main() {
     validator_avg_end_memo /= DEFAULT_TESTS;
     validator_avg_delta_memo /= DEFAULT_TESTS;
 
-    std::cout << "\n\tAverage data:\n";
+    output_result.push_back("\n\tAverage data:\n");
 
-    std::cout << "Average memory: "
-              << validator_avg_start_memo
-              << " MB ("
-              << (validator_avg_delta_memo >= 0 ? "+" : "")
-              << validator_avg_delta_memo
-              << " KB)\n";
+    output_result.push_back("Average memory: "+std::to_string(validator_avg_start_memo)+" MB (+"+std::to_string(validator_avg_delta_memo)+" MB)\n");
 
-    std::cout << "Average delta time: "
-              << validator_avg_delta_time
-              << " ms\n";
+    output_result.push_back("Average delta time: "+std::to_string(validator_avg_delta_time)+" ms\n");
 
     const std::vector<double> validator_normalized = normalize_test({validator_avg_delta_time});
 
-    std::cout << "\n\tNormalized per entry:\n";
+    output_result.push_back("\n\tNormalized per entry:\n");
 
-    std::cout << "Delta time: "
-              << validator_normalized[0] * 1000.0
-              << " us/entry\n";
+    output_result.push_back("Delta time: "+std::to_string(validator_normalized[0] * 1000.0)+" us/entry\n");
+    return output_result;
+}
 
-    benchmark.get_end_memo();
-    benchmark.get_end_time();
-
+static void print_total(Benchmark benchmark) {
     const double total_delta_memory =
         benchmark.to_kb(benchmark.get_delta_memo());
 
@@ -235,4 +214,30 @@ int main() {
     std::cout << "Total peak memory: "
               << benchmark.to_mb(benchmark.peak_private_memory())
               << " MB\n";
+}
+
+int main() {
+    auto benchmark = Benchmark();
+
+
+    benchmark.get_start_memo();
+    benchmark.get_start_time();
+
+    std::future<std::vector<std::string>> testing_create_entries = std::async(std::launch::async, test_create_entries);
+    std::future<std::vector<std::string>> testing_validate = std::async(std::launch::async, test_validate_entries);
+    const std::vector<std::string> result_test_create_entries = testing_create_entries.get();
+    const std::vector<std::string> result_test_validate = testing_validate.get();
+
+    for (auto line: result_test_create_entries) {
+        std::cout << line;
+    }
+
+    for (auto line: result_test_validate) {
+        std::cout << line;
+    }
+
+    benchmark.get_end_memo();
+    benchmark.get_end_time();
+
+    print_total(benchmark);
 }

@@ -81,9 +81,7 @@ bool Validator::is_valid() const {
         return true;
     }
 
-    auto schedule_entries = get_schedule_entries();
-
-    for (auto& entries : schedule_entries | std::views::values) {
+    for (auto schedule_entries = get_schedule_entries(); auto& entries : schedule_entries | std::views::values) {
         std::ranges::sort(
             entries,
             {},
@@ -93,13 +91,13 @@ bool Validator::is_valid() const {
         );
 
         for (std::size_t i = 1; i < entries.size(); ++i) {
-            const auto& previous = entries[i - 1];
-            const auto& current = entries[i];
+            const auto&[fst_prev, snd_prev] = entries[i - 1];
+            const auto&[fst_cur, snd_cur] = entries[i];
 
             const auto previous_end =
-                previous.first + previous.second;
+                fst_prev + snd_prev;
 
-            if (current.first < previous_end) {
+            if (fst_cur < previous_end) {
                 return false;
             }
         }
