@@ -7,8 +7,8 @@
 
 #include "Benchmark.h"
 
-constexpr int DEFAULT_TEST_VALUE = 25'000;
-constexpr int DEFAULT_TESTS = 10;
+constexpr int DEFAULT_TEST_VALUE = 1'000;
+constexpr int DEFAULT_TESTS = 100;
 
 static std::vector<double> test_create() {
     std::vector<double> result {};
