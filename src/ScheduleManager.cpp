@@ -15,14 +15,16 @@ void ScheduleManager::set_id(const int &new_id) {
 }
 
 void ScheduleManager::add_schedule_entry(ScheduleEntry &new_schedule_entry) {
-    if (this->id_exists(new_schedule_entry.get_id())) {
+    static bool id_exists = this->id_exists(new_schedule_entry.get_id());
+    static bool name_exists = this->name_exists(new_schedule_entry.get_name());
+    if (id_exists) {
         throw std::runtime_error("ID #"+ std::to_string(new_schedule_entry.get_id()) +" already used in '"+ this->get_name() +"' manager");
     }
 
-    if (this->name_exists(new_schedule_entry.get_name())) {
+    if (name_exists) {
         throw std::runtime_error("Name '"+ new_schedule_entry.get_name() +"' already used in '"+ this->get_name() +"' manager");
     }
-    if (!this->id_exists(new_schedule_entry.get_id()) and !this->name_exists(new_schedule_entry.get_name())) {
+    if (!id_exists and !name_exists) {
         new_schedule_entry.own(this->get_id());
         this->schedule_vec.push_back(new_schedule_entry);
         return;

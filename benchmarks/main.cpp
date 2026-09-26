@@ -5,10 +5,10 @@
 
 #include "Benchmark.h"
 
-constexpr int DEFAULT_TEST_VALUE = 1'000;
+constexpr int DEFAULT_TEST_VALUE = 10'000;
 constexpr int DEFAULT_TESTS = 10;
 
-std::vector<double> test() {
+static std::vector<double> test() {
     std::vector<double> result {};
 
     auto benchmark = Benchmark();
@@ -52,7 +52,7 @@ std::vector<double> test() {
     return result;
 }
 
-std::vector<double> normalize_test(const std::vector<double>& val) {
+static std::vector<double> normalize_test(const std::vector<double>& val) {
     std::vector<double> result;
 
     for (double i : val) {
@@ -62,7 +62,7 @@ std::vector<double> normalize_test(const std::vector<double>& val) {
     return result;
 }
 
-std::vector<double> test_validator() {
+static std::vector<double> test_validator() {
     std::vector<double> result {};
 
     auto benchmark = Benchmark();
