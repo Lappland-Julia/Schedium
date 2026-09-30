@@ -91,13 +91,12 @@ bool Validator::is_valid() const {
         );
 
         for (std::size_t i = 1; i < entries.size(); ++i) {
-            const auto&[fst_prev, snd_prev] = entries[i - 1];
-            const auto&[fst_cur, snd_cur] = entries[i];
+            const auto& [previous_start, previous_duration] = entries[i - 1];
+            const auto current_start = entries[i].first;
 
-            const auto previous_end =
-                fst_prev + snd_prev;
+            const auto previous_end = previous_start + previous_duration;
 
-            if (fst_cur < previous_end) {
+            if (current_start < previous_end) {
                 return false;
             }
         }

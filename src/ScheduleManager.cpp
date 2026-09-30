@@ -20,8 +20,8 @@ void ScheduleManager::set_schedule(const std::vector<ScheduleEntry> &new_schedul
 }
 
 void ScheduleManager::set_schedule(const std::string &name, const std::chrono::sys_seconds &timestamp,
-                                   const std::chrono::minutes &duration, const int &group_name,
-                                   const int &place_name) {
+                                   const std::chrono::minutes &duration, const std::string &group_name,
+                                   const std::string &place_name) {
     auto entry = ScheduleEntry(name, timestamp, duration, group_name, place_name);
     entry.own(this->get_name());
     this->add_schedule_entry(entry);

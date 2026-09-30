@@ -7,7 +7,7 @@
 
 #include "Benchmark.h"
 
-constexpr int DEFAULT_TEST_VALUE = 500;
+constexpr int DEFAULT_TEST_VALUE = 1'000;
 constexpr int DEFAULT_TESTS = 50;
 
 namespace {
@@ -47,8 +47,8 @@ static std::vector<double> test_create() {
                 generate_name(),
                 start_date,
                 duration,
-                0,
-                0
+                "Test 1",
+                "Place 1"
             )
         );
     }
@@ -84,8 +84,8 @@ static std::vector<double> test_validator() {
                 generate_name(),
                 start_date,
                 duration,
-                0,
-                0
+                "Test 2",
+                "Place 2"
             )
         );
     }
