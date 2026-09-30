@@ -11,10 +11,15 @@ constexpr int DEFAULT_TEST_VALUE = 1'000;
 constexpr int DEFAULT_TESTS = 50;
 
 namespace {
-    int _name = 1;
+    int _name_1 = 1;
+    int _name_2 = 1;
 
-    std::string generate_name() {
-        return std::to_string(_name++);
+    std::string generate_name_1() {
+        return std::to_string(_name_1++);
+    }
+
+    std::string generate_name_2() {
+        return std::to_string(_name_2++);
     }
 }
 
@@ -44,7 +49,7 @@ static std::vector<double> test_create() {
     for (int i = 0; i < DEFAULT_TEST_VALUE; i++) {
         data.push_back(
             new ScheduleEntry(
-                generate_name(),
+                generate_name_1(),
                 start_date,
                 duration,
                 "Test 1",
@@ -81,7 +86,7 @@ static std::vector<double> test_validator() {
     for (int i = 0; i < DEFAULT_TEST_VALUE; i++) {
         data.push_back(
             new ScheduleEntry(
-                generate_name(),
+                generate_name_2(),
                 start_date,
                 duration,
                 "Test 2",
@@ -89,8 +94,6 @@ static std::vector<double> test_validator() {
             )
         );
     }
-
-    result.push_back(benchmark.to_mb(benchmark.private_memory()));
 
     benchmark.get_start_time();
 
