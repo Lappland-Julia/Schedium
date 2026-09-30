@@ -1,31 +1,12 @@
 #include "ScheduleManager.h"
 
-ScheduleManager::ScheduleManager() {
-    this->schedule_vec = std::vector<ScheduleEntry>{};
-}
-
-void ScheduleManager::set_id(const int &new_id) {
-    const int prev_id = this->get_id();
-    for (auto &schedule_entry: this->schedule_vec) {
-        if (schedule_entry.owner_id() == prev_id) {
-            schedule_entry.own(new_id);
-        }
-    }
-    this->id = new_id;
-}
-
 void ScheduleManager::add_schedule_entry(ScheduleEntry &new_schedule_entry) {
-    bool id_exists = this->id_exists(new_schedule_entry.get_id());
     bool name_exists = this->name_exists(new_schedule_entry.get_name());
-    if (id_exists) {
-        throw std::runtime_error("ID #"+ std::to_string(new_schedule_entry.get_id()) +" already used in '"+ this->get_name() +"' manager");
-    }
-
     if (name_exists) {
         throw std::runtime_error("Name '"+ new_schedule_entry.get_name() +"' already used in '"+ this->get_name() +"' manager");
     }
-    if (!id_exists and !name_exists) {
-        new_schedule_entry.own(this->get_id());
+    else {
+        new_schedule_entry.own(this->get_name());
         this->schedule_vec.push_back(new_schedule_entry);
         return;
     }
@@ -39,18 +20,11 @@ void ScheduleManager::set_schedule(const std::vector<ScheduleEntry> &new_schedul
 }
 
 void ScheduleManager::set_schedule(const std::string &name, const std::chrono::sys_seconds &timestamp,
-                                  const std::chrono::minutes &duration, const int &group_id,
-                                  const int &place_id) {
-    auto entry = ScheduleEntry(name, timestamp, duration, group_id, place_id);
-    entry.own(this->get_id());
+                                   const std::chrono::minutes &duration, const int &group_name,
+                                   const int &place_name) {
+    auto entry = ScheduleEntry(name, timestamp, duration, group_name, place_name);
+    entry.own(this->get_name());
     this->add_schedule_entry(entry);
-}
-
-bool ScheduleManager::id_exists(const int &target_id) const {
-    for (const ScheduleEntry& schedule_entry: this->get_schedule()) {
-        if (schedule_entry.get_id() == target_id) return true;
-    }
-    return false;
 }
 
 bool ScheduleManager::name_exists(const std::string &target_name) const {
@@ -60,16 +34,13 @@ bool ScheduleManager::name_exists(const std::string &target_name) const {
     return false;
 }
 
-ScheduleEntry &ScheduleManager::get_entry_by_id(const int id) {
-    for (auto &schedule_entry: this->schedule_vec) {
-        if (schedule_entry.get_id() == id) return schedule_entry;
-    }
-    throw std::runtime_error("in '" + this->get_name() + "' manager #" + std::to_string(id) + " is not found");
-}
-
 ScheduleEntry & ScheduleManager::get_entry_by_name(const std::string &name) {
     for (auto &schedule_entry: this->schedule_vec) {
         if (schedule_entry.get_name() == name) return schedule_entry;
     }
-    throw std::runtime_error("in '" + this->get_name() + "' manager - name '" + std::to_string(id) + "' is not found");
+    throw std::runtime_error("in '" + this->get_name() + "' manager - name '" + name + "' is not found");
+}
+
+ScheduleManager::ScheduleManager() {
+    this->schedule_vec = std::vector<ScheduleEntry>{};
 }

@@ -1,26 +1,21 @@
 #ifndef ALLOC_SCHEDULE_H
 #define ALLOC_SCHEDULE_H
 #include <chrono>
-#include "Generators.h"
 #include <string>
 
 
 class ScheduleEntry {
 private:
-    int id = 0;
     std::string name;
     std::chrono::minutes duration;
     std::chrono::sys_seconds start_time;
-    int group_id = 0;
-    int place_id = 0;
+    std::string group_name = "";
+    std::string place_name = "";
     bool owned = false;
-    int manager_id = -1;
+    std::string manager_name = "";
 public:
     const int MAX_DURATION = 6000;
     const std::chrono::minutes MAX_DURATION_TIME = std::chrono::minutes(MAX_DURATION);
-
-    int get_id() const { return this->id; }
-    void set_id(const int &new_id);
 
     std::string get_name() const { return this->name; }
     void set_name(const std::string &new_name);
@@ -31,18 +26,18 @@ public:
     std::chrono::minutes get_duration() const { return this->duration; };
     void set_duration(const std::chrono::minutes &new_duration);
 
-    int get_group_id() const { return this->group_id; }
-    void set_group_id(const int &new_group_id);
+    std::string get_group_name() const { return this->group_name; }
+    void set_group_name(const int &new_group_name);
 
-    int get_place_id() const { return this->place_id; }
-    void set_place_id(const int &new_place_id);
+    std::string get_place_name() const { return this->place_name; }
+    void set_place_name(const int &new_place_name);
 
-    void own(const int &owner_manager_id) { this->owned = true; this->manager_id = owner_manager_id; }
+    void own(const std::string &owner_manager_name) { this->owned = true; this->manager_name = owner_manager_name; }
 
     bool is_owned() const {return this->owned; }
-    int owner_id() const {return this->manager_id;}
+    std::string owner_name() const {return this->manager_name;}
 
-    ScheduleEntry (const std::string &name, const std::chrono::sys_seconds &timestamp, const std::chrono::minutes &duration, const int &group_id, const int &place_id);
+    ScheduleEntry (const std::string &name, const std::chrono::sys_seconds &timestamp, const std::chrono::minutes &duration, const int &group_name, const int &place_name);
 
 };
 

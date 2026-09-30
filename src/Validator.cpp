@@ -5,19 +5,19 @@
 #include <ranges>
 #include <stdexcept>
 
-std::map<int, std::vector<std::pair<std::chrono::sys_seconds, std::chrono::minutes>>> Validator::
+std::map<std::string, std::vector<std::pair<std::chrono::sys_seconds, std::chrono::minutes>>> Validator::
 get_schedule_entries() const {
-    std::map<int, std::vector<std::pair<std::chrono::sys_seconds, std::chrono::minutes>>> schedule_entries {};
+    std::map<std::string, std::vector<std::pair<std::chrono::sys_seconds, std::chrono::minutes>>> schedule_entries {};
     for (auto manager: this->managers) {
         for (auto entry: manager.get_schedule_entries()) {
-            int place_id = entry.get_place_id();
-            if (!schedule_entries.contains(place_id)) {
-                schedule_entries[place_id] = {};
+            std::string place_name = entry.get_place_name();
+            if (!schedule_entries.contains(place_name)) {
+                schedule_entries[place_name] = {};
             }
             std::pair<std::chrono::sys_seconds, std::chrono::minutes> value {};
             value.first = entry.get_timestamp();
             value.second = entry.get_duration();
-            schedule_entries[place_id].push_back(value);
+            schedule_entries[place_name].push_back(value);
         }
     }
     return schedule_entries;
