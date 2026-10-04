@@ -14,8 +14,8 @@ private:
     bool owned = false;
     std::string manager_name = "";
 public:
-    const int MAX_DURATION = 6000;
-    const std::chrono::minutes MAX_DURATION_TIME = std::chrono::minutes(MAX_DURATION);
+    static constexpr int MAX_DURATION = 6000;
+    static constexpr auto MAX_DURATION_TIME = std::chrono::minutes(MAX_DURATION);
 
     std::string get_name() const { return this->name; }
     void set_name(const std::string &new_name);

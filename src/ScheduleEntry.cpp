@@ -12,6 +12,9 @@ void ScheduleEntry::set_duration(const std::chrono::minutes &new_duration) {
     if (new_duration > this->MAX_DURATION_TIME) {
         throw std::invalid_argument("\"" + this->name + "\" entry: duration is greater than maximum allowed duration ("+std::to_string(MAX_DURATION)+" minutes)");
     }
+    if (new_duration <= std::chrono::minutes{0}) {
+        throw std::invalid_argument("\"" + this->name + "\" entry: duration must be more 0 minutes");
+    }
     this->duration = new_duration;
 }
 

@@ -13,6 +13,8 @@ add_library(Schedium
         src/Schedium.hpp
 )
 
+target_compile_features(Schedium PUBLIC cxx_std_23)
+
 target_include_directories(Schedium
         PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/src
