@@ -24,12 +24,12 @@ public:
     std::string get_validating_level() const;
     void set_validating_level(const std::string &new_validating_level);
 
-    void add_manager(const ScheduleManager &Manager);
-    void add_managers(const std::vector<ScheduleManager> &Managers);
+    void add_manager(const ScheduleManager &new_manager);
+    void add_managers(const std::vector<ScheduleManager> &new_managers);
 
     Validator();
-    explicit Validator(const ScheduleManager &Manager);
-    explicit Validator(const std::vector<ScheduleManager> &Managers);
+    explicit Validator(const ScheduleManager &manager);
+    explicit Validator(const std::vector<ScheduleManager> &schedule_managers);
 
     bool is_valid() const;
 };

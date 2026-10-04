@@ -8,16 +8,10 @@
 std::map<std::string, std::vector<std::pair<std::chrono::sys_seconds, std::chrono::minutes>>> Validator::
 get_schedule_entries() const {
     std::map<std::string, std::vector<std::pair<std::chrono::sys_seconds, std::chrono::minutes>>> schedule_entries {};
-    for (auto manager: this->managers) {
-        for (auto entry: manager.get_schedule_entries()) {
-            std::string place_name = entry.get_place_name();
-            if (!schedule_entries.contains(place_name)) {
-                schedule_entries[place_name] = {};
-            }
-            std::pair<std::chrono::sys_seconds, std::chrono::minutes> value {};
-            value.first = entry.get_timestamp();
-            value.second = entry.get_duration();
-            schedule_entries[place_name].push_back(value);
+    for (const auto& manager: this->managers) {
+        for (const auto& entry: manager.get_schedule_entries()) {
+            const auto& place_name = entry.get_place_name();
+            schedule_entries[place_name].emplace_back(entry.get_timestamp(), entry.get_duration());
         }
     }
     return schedule_entries;
@@ -54,12 +48,12 @@ void Validator::set_validating_level(const std::string &new_validating_level) {
     }
 }
 
-void Validator::add_manager(const ScheduleManager &Manager) {
-    this->managers.push_back(Manager);
+void Validator::add_manager(const ScheduleManager &new_manager) {
+    this->managers.push_back(new_manager);
 }
 
-void Validator::add_managers(const std::vector<ScheduleManager> &Managers) {
-    for (ScheduleManager manager: Managers) {
+void Validator::add_managers(const std::vector<ScheduleManager> &new_managers) {
+    for (const auto& manager: new_managers) {
         this->add_manager(manager);
     }
 }
@@ -68,12 +62,12 @@ Validator::Validator() {
     this->managers = std::vector<ScheduleManager>{};
 }
 
-Validator::Validator(const ScheduleManager &Manager) {
-    this->add_manager(Manager);
+Validator::Validator(const ScheduleManager &manager) {
+    this->add_manager(manager);
 }
 
-Validator::Validator(const std::vector<ScheduleManager> &Managers) {
-    this->add_managers(Managers);
+Validator::Validator(const std::vector<ScheduleManager> &schedule_managers) {
+    this->add_managers(schedule_managers);
 }
 
 bool Validator::is_valid() const {

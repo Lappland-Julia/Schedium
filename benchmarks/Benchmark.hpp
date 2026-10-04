@@ -20,7 +20,7 @@ public:
 
     void get_start_time();
     void get_end_time();
-    double get_delta_time();
+    double get_delta_time() const;
 
     void get_start_memo();
     void get_end_memo();

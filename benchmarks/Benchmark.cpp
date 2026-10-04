@@ -36,7 +36,7 @@ void Benchmark::get_end_time() {
     this->end_ = std::chrono::steady_clock::now();
 }
 
-double Benchmark::get_delta_time() {
+double Benchmark::get_delta_time() const {
     if (start_ == decltype(start_) {} || end_ == decltype(end_) {}) {
         throw std::invalid_argument("You must use get_start_time() and get_end_time() before this function");
     }

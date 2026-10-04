@@ -167,7 +167,7 @@ static std::vector<std::string> output_validate_entries() {
     return output_result;
 }
 
-static void print_total(Benchmark benchmark) {
+static void print_total(const Benchmark& benchmark) {
     const double total_delta_memory =
         benchmark.to_kb(benchmark.get_delta_memo());
 
@@ -201,11 +201,11 @@ int main() {
     const std::vector<std::string> result_1 = testing_entries.get();
     const std::vector<std::string> result_2 = testing_validator.get();
 
-    for (auto line: result_1) {
+    for (const auto& line: result_1) {
         std::cout << line;
     }
 
-    for (auto line: result_2) {
+    for (const auto& line: result_2) {
         std::cout << line;
     }
 

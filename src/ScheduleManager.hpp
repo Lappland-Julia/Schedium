@@ -1,6 +1,7 @@
 #ifndef ALLOC_SCHEDULEMANAGER_H
 #define ALLOC_SCHEDULEMANAGER_H
 #include <vector>
+#include <utility>
 #include "ScheduleEntry.hpp"
 
 
@@ -10,16 +11,22 @@ private:
     std::vector<ScheduleEntry> schedule_vec;
 
 public:
-    std::string get_name() const { return this->name; }
+    const std::string& get_name() const & { return this->name; }
+    std::string get_name() && { return std::move(this->name); }
+    std::string get_name() const && { return this->name; }
     void set_name(const std::string &new_name) { this->name = new_name; }
 
-    std::vector<ScheduleEntry> get_schedule() const { return this->schedule_vec; }
+    const std::vector<ScheduleEntry>& get_schedule() const & { return schedule_vec; }
+    std::vector<ScheduleEntry> get_schedule() && { return std::move(schedule_vec); }
+    std::vector<ScheduleEntry> get_schedule() const && { return schedule_vec; }
 
-    void add_schedule_entry(ScheduleEntry &new_schedule_entry);
+    void add_schedule_entry(ScheduleEntry new_schedule_entry);
     void set_schedule(const std::vector<ScheduleEntry> &new_schedule_vec);
 
     void set_schedule(const std::string &name, const std::chrono::sys_seconds &timestamp, const std::chrono::minutes &duration, const std::string &group_name, const std::string &place_name);
-    std::vector<ScheduleEntry> get_schedule_entries() const { return this->schedule_vec; }
+    const std::vector<ScheduleEntry>& get_schedule_entries() const & { return this->schedule_vec; }
+    std::vector<ScheduleEntry> get_schedule_entries() && { return std::move(this->schedule_vec); }
+    std::vector<ScheduleEntry> get_schedule_entries() const && { return this->schedule_vec; }
 
     bool name_exists(const std::string &target_name) const;
 
