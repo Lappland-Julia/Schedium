@@ -1,7 +1,7 @@
 #ifndef ALLOC_SCHEDULEMANAGER_H
 #define ALLOC_SCHEDULEMANAGER_H
 #include <vector>
-#include "ScheduleEntry.h"
+#include "ScheduleEntry.hpp"
 
 
 class ScheduleManager {

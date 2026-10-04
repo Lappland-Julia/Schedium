@@ -10,7 +10,7 @@ add_library(Schedium
         src/ScheduleEntry.cpp
         src/ScheduleManager.cpp
         src/Validator.cpp
-        src/Schedium.h
+        src/Schedium.hpp
 )
 
 target_include_directories(Schedium

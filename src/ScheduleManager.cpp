@@ -1,4 +1,4 @@
-#include "ScheduleManager.h"
+#include "ScheduleManager.hpp"
 
 void ScheduleManager::add_schedule_entry(ScheduleEntry &new_schedule_entry) {
     bool name_exists = this->name_exists(new_schedule_entry.get_name());

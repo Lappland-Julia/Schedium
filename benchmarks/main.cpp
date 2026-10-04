@@ -3,9 +3,9 @@
 #include <string>
 #include <random>
 #include <future>
-#include <Schedium.h>
+#include <Schedium.hpp>
 
-#include "Benchmark.h"
+#include "Benchmark.hpp"
 
 constexpr int DEFAULT_TEST_VALUE = 1'000;
 constexpr int DEFAULT_TESTS = 50;

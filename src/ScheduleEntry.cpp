@@ -1,4 +1,4 @@
-#include "ScheduleEntry.h"
+#include "ScheduleEntry.hpp"
 
 void ScheduleEntry::set_name(const std::string &new_name) {
     this->name = new_name;
