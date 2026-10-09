@@ -11,6 +11,7 @@
 class Validator {
 private:
     int gap_score = 5;
+    int overlap_penalty = -10'000;
     int validating_level = 2;
     std::vector<ScheduleManager> managers = {};
     enum class VALIDATING_TYPES: int { HARD = 3, MEDIUM = 2, EASY = 1 };
@@ -32,6 +33,8 @@ public:
     explicit Validator(const std::vector<ScheduleManager> &schedule_managers);
 
     bool is_valid() const;
+
+    int score() const;
 };
 
 

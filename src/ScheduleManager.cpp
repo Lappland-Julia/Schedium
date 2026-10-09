@@ -33,7 +33,7 @@ bool ScheduleManager::name_exists(const std::string &target_name) const {
     return false;
 }
 
-const ScheduleEntry& ScheduleManager::get_entry_by_name(const std::string& target_name) const {
+const ScheduleEntry& ScheduleManager::get_entry(const std::string& target_name) const {
     for (const auto& schedule_entry : this->schedule_vec) {
         if (schedule_entry.get_name() == target_name) return schedule_entry;
     }

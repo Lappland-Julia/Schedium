@@ -30,7 +30,7 @@ public:
 
     bool name_exists(const std::string &target_name) const;
 
-    const ScheduleEntry & get_entry_by_name(const std::string& target_name) const;
+    const ScheduleEntry & get_entry(const std::string& target_name) const;
     void rename_schedule_entry(const std::string& current_name, const std::string& new_name);
 
     ScheduleManager ();

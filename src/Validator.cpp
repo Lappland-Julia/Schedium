@@ -98,3 +98,35 @@ bool Validator::is_valid() const {
 
     return true;
 }
+
+int Validator::score() const {
+
+    int schedule_score = 0;
+
+    if (managers.empty()) {
+        return schedule_score;
+    }
+
+    for (auto schedule_entries = get_schedule_entries(); auto& entries : schedule_entries | std::views::values) {
+        std::ranges::sort(
+            entries,
+            {},
+            [](const auto& entry) {
+                return entry.first;
+            }
+        );
+
+        for (std::size_t i = 1; i < entries.size(); ++i) {
+            const auto& [previous_start, previous_duration] = entries[i - 1];
+            const auto current_start = entries[i].first;
+
+            const auto previous_end = previous_start + previous_duration;
+
+            if (current_start < previous_end) {
+                schedule_score -= this->overlap_penalty;
+            }
+        }
+    }
+
+    return schedule_score;
+}
