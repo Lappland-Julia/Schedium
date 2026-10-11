@@ -1,5 +1,7 @@
 #include "ScheduleEntry.hpp"
 
+#include <stdexcept>
+
 void ScheduleEntry::set_name(const std::string &new_name) {
     this->name = new_name;
 }
@@ -10,7 +12,9 @@ void ScheduleEntry::set_timestamp(const std::chrono::sys_seconds &new_timestamp)
 
 void ScheduleEntry::set_duration(const std::chrono::minutes &new_duration) {
     if (new_duration > this->MAX_DURATION_TIME) {
-        throw std::invalid_argument("\"" + this->name + "\" entry: duration is greater than maximum allowed duration ("+std::to_string(MAX_DURATION)+" minutes)");
+        throw std::invalid_argument("\"" + this->name +
+                                    "\" entry: duration is greater than maximum allowed duration (" +
+                                    std::to_string(MAX_DURATION) + " minutes)");
     }
     if (new_duration <= std::chrono::minutes{0}) {
         throw std::invalid_argument("\"" + this->name + "\" entry: duration must be more 0 minutes");
@@ -27,7 +31,8 @@ void ScheduleEntry::set_place_name(const std::string &new_place_name) {
 }
 
 ScheduleEntry::ScheduleEntry(const std::string &name, const std::chrono::sys_seconds &timestamp,
-                             const std::chrono::minutes &duration, const std::string &group_name, const std::string &place_name) {
+                             const std::chrono::minutes &duration, const std::string &group_name,
+                             const std::string &place_name) {
     this->set_name(name);
     this->set_timestamp(timestamp);
     this->set_duration(duration);

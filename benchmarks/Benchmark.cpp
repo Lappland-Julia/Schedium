@@ -7,9 +7,8 @@
 double Benchmark::private_memory() {
     PROCESS_MEMORY_COUNTERS_EX memory_info{};
 
-    if (GetProcessMemoryInfo(GetCurrentProcess(), reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&memory_info),
-        sizeof(memory_info)))
-    {
+    if (GetProcessMemoryInfo(GetCurrentProcess(), reinterpret_cast<PROCESS_MEMORY_COUNTERS *>(&memory_info),
+                             sizeof(memory_info))) {
         const double memory_mb = static_cast<double>(memory_info.PrivateUsage); // WorkingSetSize - alt
         return memory_mb;
     }
@@ -19,9 +18,8 @@ double Benchmark::private_memory() {
 double Benchmark::peak_private_memory() {
     PROCESS_MEMORY_COUNTERS_EX memory_info{};
 
-    if (GetProcessMemoryInfo(GetCurrentProcess(), reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&memory_info),
-        sizeof(memory_info)))
-    {
+    if (GetProcessMemoryInfo(GetCurrentProcess(), reinterpret_cast<PROCESS_MEMORY_COUNTERS *>(&memory_info),
+                             sizeof(memory_info))) {
         const double memory_mb = static_cast<double>(memory_info.PeakPagefileUsage);
         return memory_mb;
     }
@@ -37,7 +35,7 @@ void Benchmark::get_end_time() {
 }
 
 double Benchmark::get_delta_time() const {
-    if (start_ == decltype(start_) {} || end_ == decltype(end_) {}) {
+    if (start_ == decltype(start_){} || end_ == decltype(end_){}) {
         throw std::invalid_argument("You must use get_start_time() and get_end_time() before this function");
     }
     if (start_ > end_) {
