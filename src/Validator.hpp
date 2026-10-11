@@ -7,32 +7,39 @@
 
 #include "ScheduleManager.hpp"
 
-
 class Validator {
 private:
     int gap_score = 5;
+    int overlap_penalty = -10'000;
     int validating_level = 2;
     std::vector<ScheduleManager> managers = {};
-    enum class VALIDATING_TYPES: int { HARD = 3, MEDIUM = 2, EASY = 1 };
 
-    std::map<std::string, std::vector<std::pair<std::chrono::sys_seconds, std::chrono::minutes>>> get_schedule_entries() const;
+    enum class VALIDATING_TYPES : int { HARD = 3, MEDIUM = 2, EASY = 1 };
+
+    std::map<std::string, std::vector<std::pair<std::chrono::sys_seconds, std::chrono::minutes>>>
+    get_schedule_entries() const;
+
 public:
-
     int get_gap_score() const { return this->gap_score; }
-    void update_gap_score(const int &new_gap_score) {this->gap_score = new_gap_score; };
+    void update_gap_score(const int &new_gap_score) { this->gap_score = new_gap_score; };
 
     std::string get_validating_level() const;
+
     void set_validating_level(const std::string &new_validating_level);
 
-    void add_manager(const ScheduleManager &Manager);
-    void add_managers(const std::vector<ScheduleManager> &Managers);
+    void add_manager(const ScheduleManager &new_manager);
+
+    void add_managers(const std::vector<ScheduleManager> &new_managers);
 
     Validator();
-    explicit Validator(const ScheduleManager &Manager);
-    explicit Validator(const std::vector<ScheduleManager> &Managers);
+
+    explicit Validator(const ScheduleManager &manager);
+
+    explicit Validator(const std::vector<ScheduleManager> &schedule_managers);
 
     bool is_valid() const;
+
+    int score() const;
 };
 
-
-#endif //SCHEDIUM_VALIDATOR_H
+#endif // SCHEDIUM_VALIDATOR_H

@@ -33,3 +33,11 @@
 
 # IDE
 .idea
+
+# Code reviews
+code_reviews
+
+# CMake build directories and compilation database
+/build*/
+/cmake-build*/
+/compile_commands.json
