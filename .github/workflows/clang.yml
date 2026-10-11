@@ -1,0 +1,40 @@
+name: Clang tools
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  clang:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install LLVM 18 tools and CMake
+        run: |
+          python3 -m pip install 'clang-format==18.1.8' 'clang-tidy==18.1.8' 'cmake==4.2.3' 'ninja==1.13.2'
+
+      - name: Configure
+        run: >-
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
+          -DSCHEDIUM_CLANG_FORMAT=clang-format -DSCHEDIUM_CLANG_TIDY=clang-tidy
+
+      - name: Verify clang-tidy configuration
+        run: clang-tidy --verify-config
+
+      - name: Check formatting
+        run: cmake --build build --target format-check
+
+      - name: Build library
+        run: cmake --build build --target Schedium
+
+      - name: Run clang-tidy
+        run: cmake --build build --target clang-tidy

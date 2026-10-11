@@ -1,0 +1,13 @@
+---
+InheritParentConfig: false
+Checks: >-
+  -*,
+  clang-analyzer-*,
+  bugprone-*,
+  performance-*,
+  modernize-use-nullptr,
+  modernize-use-override
+WarningsAsErrors: 'clang-analyzer-*'
+HeaderFilterRegex: '(^|.*[/\\])(src|benchmarks)[/\\].*\.(h|hpp)$'
+SystemHeaders: false
+FormatStyle: file
