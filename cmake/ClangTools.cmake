@@ -5,10 +5,17 @@ file(GLOB_RECURSE SCHEDIUM_FORMAT_SOURCES CONFIGURE_DEPENDS
     "${PROJECT_SOURCE_DIR}/src/*.cpp"
     "${PROJECT_SOURCE_DIR}/src/*.hpp"
     "${PROJECT_SOURCE_DIR}/src/*.h"
-    "${PROJECT_SOURCE_DIR}/benchmarks/*.cpp"
-    "${PROJECT_SOURCE_DIR}/benchmarks/*.hpp"
-    "${PROJECT_SOURCE_DIR}/benchmarks/*.h"
+    "${PROJECT_SOURCE_DIR}/tests/*.cpp"
+    "${PROJECT_SOURCE_DIR}/tests/*.hpp"
 )
+if(SCHEDIUM_BUILD_BENCHMARKS)
+    file(GLOB_RECURSE SCHEDIUM_BENCHMARK_FORMAT_SOURCES CONFIGURE_DEPENDS
+        "${PROJECT_SOURCE_DIR}/benchmarks/*.cpp"
+        "${PROJECT_SOURCE_DIR}/benchmarks/*.hpp"
+        "${PROJECT_SOURCE_DIR}/benchmarks/*.h"
+    )
+    list(APPEND SCHEDIUM_FORMAT_SOURCES ${SCHEDIUM_BENCHMARK_FORMAT_SOURCES})
+endif()
 list(SORT SCHEDIUM_FORMAT_SOURCES)
 
 if(SCHEDIUM_CLANG_FORMAT)

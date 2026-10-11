@@ -16,7 +16,7 @@ private:
 
     enum class VALIDATING_TYPES : int { HARD = 3, MEDIUM = 2, EASY = 1 };
 
-    std::map<std::string, std::vector<std::pair<std::chrono::sys_seconds, std::chrono::minutes> > >
+    std::map<std::string, std::vector<std::pair<std::chrono::sys_seconds, std::chrono::minutes>>>
     get_schedule_entries() const;
 
 public:

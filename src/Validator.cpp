@@ -5,11 +5,11 @@
 #include <ranges>
 #include <stdexcept>
 
-std::map<std::string, std::vector<std::pair<std::chrono::sys_seconds, std::chrono::minutes> > >
+std::map<std::string, std::vector<std::pair<std::chrono::sys_seconds, std::chrono::minutes>>>
 Validator::get_schedule_entries() const {
-    std::map<std::string, std::vector<std::pair<std::chrono::sys_seconds, std::chrono::minutes> > > schedule_entries{};
-    for (const auto &manager: this->managers) {
-        for (const auto &entry: manager.get_schedule_entries()) {
+    std::map<std::string, std::vector<std::pair<std::chrono::sys_seconds, std::chrono::minutes>>> schedule_entries{};
+    for (const auto &manager : this->managers) {
+        for (const auto &entry : manager.get_schedule_entries()) {
             const auto &place_name = entry.get_place_name();
             schedule_entries[place_name].emplace_back(entry.get_timestamp(), entry.get_duration());
         }
@@ -50,7 +50,7 @@ void Validator::add_manager(const ScheduleManager &new_manager) {
 }
 
 void Validator::add_managers(const std::vector<ScheduleManager> &new_managers) {
-    for (const auto &manager: new_managers) {
+    for (const auto &manager : new_managers) {
         this->add_manager(manager);
     }
 }
@@ -72,7 +72,7 @@ bool Validator::is_valid() const {
         return true;
     }
 
-    for (auto schedule_entries = get_schedule_entries(); auto &entries: schedule_entries | std::views::values) {
+    for (auto schedule_entries = get_schedule_entries(); auto &entries : schedule_entries | std::views::values) {
         std::ranges::sort(entries, {}, [](const auto &entry) { return entry.first; });
 
         for (std::size_t i = 1; i < entries.size(); ++i) {
@@ -97,7 +97,7 @@ int Validator::score() const {
         return schedule_score;
     }
 
-    for (auto schedule_entries = get_schedule_entries(); auto &entries: schedule_entries | std::views::values) {
+    for (auto schedule_entries = get_schedule_entries(); auto &entries : schedule_entries | std::views::values) {
         std::ranges::sort(entries, {}, [](const auto &entry) { return entry.first; });
 
         for (std::size_t i = 1; i < entries.size(); ++i) {

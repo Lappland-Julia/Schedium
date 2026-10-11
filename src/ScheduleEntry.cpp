@@ -1,5 +1,7 @@
 #include "ScheduleEntry.hpp"
 
+#include <stdexcept>
+
 void ScheduleEntry::set_name(const std::string &new_name) {
     this->name = new_name;
 }

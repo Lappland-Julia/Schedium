@@ -25,6 +25,7 @@ jobs:
       - name: Configure
         run: >-
           cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
+          -DBUILD_TESTING=OFF -DSCHEDIUM_BUILD_BENCHMARKS=OFF
           -DSCHEDIUM_CLANG_FORMAT=clang-format -DSCHEDIUM_CLANG_TIDY=clang-tidy
 
       - name: Verify clang-tidy configuration
