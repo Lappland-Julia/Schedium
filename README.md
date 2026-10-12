@@ -4,7 +4,7 @@
 
 ## Русский
 
-Schedium — небольшая C++23-библиотека для хранения расписаний и проверки временных конфликтов. Проект находится на ранней стадии разработки: сейчас доступны события, менеджеры расписаний и валидатор занятости помещений. Автоматическое построение расписания и полноценная система жёстких, средних и мягких ограничений пока не реализованы.
+Schedium — небольшая C++23-библиотека для хранения расписаний и оценки их качества. Проект находится на ранней стадии разработки: сейчас доступны события, менеджеры расписаний и валидатор с бонусами за свободные промежутки, штрафами за пересечения и режимами EASY, MEDIUM, HARD. Автоматическое построение расписания и дополнительные ограничения для групп и преподавателей пока не реализованы.
 
 ### Требования
 
@@ -124,7 +124,7 @@ cmake --build build --config Debug --parallel 2
 
 ```text
 Valid: true, score: 0
-Valid: false, score: 10000
+Valid: false, score: -10000
 ```
 
 ### Как работает API
@@ -141,13 +141,40 @@ Valid: false, score: 10000
 - Валидатор объединяет события по `place_name` из всех переданных менеджеров. `group_name` хранится в событии, но отдельная проверка занятости группы пока отсутствует. Пустые названия помещений тоже попадают в одну общую группу.
 - Интервалы имеют вид `[начало, конец)`: следующее событие может начаться точно в момент окончания предыдущего. Проверка учитывает полную дату и секунды, в том числе переход через полночь. Преобразование локального времени и часовых поясов выполняет приложение.
 - `Validator` хранит **копии** менеджеров. После изменения расписания создайте новый валидатор; изменение исходного менеджера не обновляет уже созданный.
-- В текущей реализации `score()` возвращает `int` и добавляет **10000** за пересечение соседних по времени событий в одном помещении. Меньше — лучше, пустое расписание даёт `0`. Это не подсчёт всех пересекающихся пар при вложенных интервалах; для ответа о допустимости используйте `is_valid()`.
-- Уровни `EASY`, `MEDIUM`, `HARD` и `gap_score` доступны через API, но сейчас не меняют алгоритмы `is_valid()` и `score()`.
+- `score()` возвращает `std::int64_t`: сумма бонусов и отрицательных штрафов, больше — лучше. За каждую пересекающуюся пару в одном помещении добавляется `overlap_penalty`, по умолчанию **−10000**. Вложенные интервалы и одинаковое время начала учитываются полностью; порядок добавления событий не влияет на счёт.
+- За каждый свободный промежуток в помещении **строго больше** `gap_duration` начисляется один `gap_score`, по умолчанию **+5** за промежуток больше **15 минут**. При перекрывающихся занятиях промежуток отсчитывается от самого позднего окончания. Длинный промежуток, в том числе через полночь, тоже даёт один бонус; между разными помещениями бонус не начисляется.
+- `is_valid()` сравнивает `score()` с минимальным счётом выбранного режима. По умолчанию `HARD` требует **0**, `MEDIUM` — **−5000**, `EASY` — **−10000**. Равенство порогу допустимо; бонусы могут компенсировать штрафы. Пустое расписание имеет счёт `0` и тоже проверяется по порогу.
+- Непредставимый конец интервала или переполнение при накоплении счёта вызывают `std::overflow_error` из `score()` и `is_valid()`.
 - `get_entry()` возвращает ссылку на элемент менеджера. Храните менеджер живым и не удерживайте ссылку через добавления, способные перераспределить его вектор; при необходимости используйте копию: `auto entry = schedule.get_entry("Math");`.
+
+### Настройка score
+
+| Параметр | По умолчанию | Чтение и изменение |
+| --- | --- | --- |
+| Бонус за промежуток | `5` | `get_gap_score()`, `update_gap_score(value)`; значение неотрицательное. |
+| Минимальная длительность промежутка | `std::chrono::minutes{15}` | `get_gap_duration()`, `update_gap_duration(value)`; длительность неотрицательная и должна представляться в секундах. |
+| Штраф за пересекающуюся пару | `-10000` | `get_overlap_penalty()`, `update_overlap_penalty(value)`; значение неположительное. |
+| Пороги EASY, MEDIUM, HARD | `-10000`, `-5000`, `0` | `update_min_scores(easy, medium, hard)`; требуется `easy <= medium <= hard`. `get_min_score()` возвращает порог выбранного режима. |
+| Режим | `"MEDIUM"` | `get_validating_level()`, `set_validating_level("EASY" / "MEDIUM" / "HARD")`. |
+
+Все значения счёта и порогов имеют тип `std::int64_t`. Нулевой бонус или штраф отключает соответствующий вклад. Недопустимая настройка вызывает `std::invalid_argument` и сохраняет прежнее значение.
+
+```cpp
+Validator validator{schedule};
+validator.update_gap_duration(std::chrono::minutes{20});
+validator.update_gap_score(10);
+validator.update_overlap_penalty(-100);
+validator.update_min_scores(-100, -50, 0);
+validator.set_validating_level("HARD");
+
+std::cout << "Score: " << validator.score()
+          << ", required: " << validator.get_min_score()
+          << ", valid: " << std::boolalpha << validator.is_valid() << '\n';
+```
 
 ### Тесты
 
-[tests/CMakeTests.cpp](tests/CMakeTests.cpp) содержит собственный небольшой runner: 32 сценария проверяют события, менеджеры, исключения, владение данными и временные конфликты. CTest видит их как **один** тест `CMakeTests`; число сценариев выводится внутри него.
+[tests/CMakeTests.cpp](tests/CMakeTests.cpp) содержит собственный небольшой runner: 48 сценариев проверяют события, менеджеры, исключения, владение данными, бонусы, штрафы, пороги режимов и границы времени и счёта. CTest видит их как **один** тест `CMakeTests`; число сценариев выводится внутри него.
 
 Запуск после сборки с `BUILD_TESTING=ON`:
 
@@ -156,13 +183,13 @@ cmake --build build --config Debug --target CMakeTests --parallel 2
 ctest --test-dir build -C Debug --tests-regex "^CMakeTests$" --verbose --output-on-failure --no-tests=error
 ```
 
-Для текущего набора ожидаются `32/32 cases passed`, отсутствие `FAIL` и нулевой код завершения. `--no-tests=error` предотвращает ложный успех при отсутствии зарегистрированного теста. При падении смотрите сообщение с файлом, строкой и выражением, а также `build/Testing/Temporary/LastTest.log`.
+Для текущего набора ожидаются `48/48 cases passed`, отсутствие `FAIL` и нулевой код завершения. `--no-tests=error` предотвращает ложный успех при отсутствии зарегистрированного теста. При падении смотрите сообщение с файлом, строкой и выражением, а также `build/Testing/Temporary/LastTest.log`.
 
 ### Подготовка Pull Request
 
 1. Создайте fork, клонируйте его и заведите отдельную ветку, например `git switch -c fix/room-conflict`. Для прямого доступа к репозиторию fork не обязателен.
 2. Делайте изменение с ясной целью. При исправлении ошибки добавьте сценарий, воспроизводящий её; при добавлении API проверьте обычные случаи, границы и исключения.
-3. Добавляйте тестовую функцию и её запись в список `test::run(...)` в `tests/CMakeTests.cpp`. Если число сценариев изменилось, обновите последний аргумент runner (сейчас `32`) и подпись шага в `.github/workflows/tests.yml`; при необходимости обновите README. Runner намеренно завершается с ошибкой при несовпадении счётчика и списка.
+3. Добавляйте тестовую функцию и её запись в список `test::run(...)` в `tests/CMakeTests.cpp`. Если число сценариев изменилось, обновите последний аргумент runner (сейчас `48`) и подпись шага в `.github/workflows/tests.yml`; при необходимости обновите README. Runner намеренно завершается с ошибкой при несовпадении счётчика и списка.
 4. Выполните тесты и проверки LLVM ниже. Для изменения поведения проверьте Debug/Release и `BUILD_SHARED_LIBS=OFF/ON`. CI повторит эту матрицу на обеих ОС.
 5. Проверьте `git diff --check` и diff перед отправкой. Сохраняйте стиль из `.clang-format`; сборочные каталоги, бинарники и настройки IDE не включайте в PR.
 6. В описании PR укажите проблему, итоговое поведение, изменения публичного API и команды с результатами проверки. Разделяйте выполненные и пропущенные проверки. После push проверьте оба workflow в GitHub и исправьте ошибки перед запросом review.
@@ -233,7 +260,7 @@ API: <изменения совместимости или «без измене
 
 ### Бенчмарк и CLion
 
-Бенчмарк использует Windows API и `Psapi`; на Linux его необходимо отключать. Он измеряет создание и валидацию 1000 событий в 50 повторениях, выводит время и память. Бенчмарк не заменяет функциональные тесты и не входит в CI.
+Бенчмарк использует Windows API и `Psapi`; на Linux его необходимо отключать. Он измеряет создание 1000 событий и отдельно построение менеджера, копирование в валидатор и `score()` в 50 повторениях. Для оценки есть два сценария: все события пересекаются либо разделены промежутками по 16 минут. Каждое повторение проверяет ожидаемый счёт (**−4995000000** и **4995**) и валидность вне измеряемого участка. Бенчмарк выводит время и память, не заменяет функциональные тесты и не входит в CI.
 
 PowerShell на Windows:
 
@@ -263,7 +290,7 @@ cmake --build build-bench --config Release --target SchediumBenchmarks --paralle
 
 ## English
 
-Schedium is a small C++23 library for storing schedules and checking time conflicts. It is in early development: the current implementation provides entries, schedule managers, and room conflict validation. Automatic schedule generation and a complete hard/medium/soft constraint system are not implemented yet.
+Schedium is a small C++23 library for storing schedules and scoring their quality. It is at an early stage: events, schedule managers, and a validator with free-gap bonuses, overlap penalties, and EASY, MEDIUM, HARD levels are available. Automatic schedule generation and additional constraints for groups and teachers are not implemented yet.
 
 ### Requirements
 
@@ -383,7 +410,7 @@ Expected output:
 
 ```text
 Valid: true, score: 0
-Valid: false, score: 10000
+Valid: false, score: -10000
 ```
 
 ### API behavior
@@ -400,13 +427,40 @@ Valid: false, score: 10000
 - The validator groups entries by `place_name` across all supplied managers. `group_name` is stored, but group availability is not checked separately yet. Empty room names also share a single group.
 - Intervals are `[start, end)`: an entry may start exactly when the previous entry ends. Validation uses the full date and seconds, including intervals crossing midnight. Local-time and time-zone conversion belongs to the application.
 - `Validator` stores **copies** of managers. Create a new validator after changing a schedule; modifying the original manager does not update an existing validator.
-- Currently, `score()` returns `int` and adds **10000** for each overlapping pair of adjacent entries after sorting by start time within a room. Lower is better; an empty schedule scores `0`. It does not count every overlapping pair for nested intervals; use `is_valid()` to determine validity.
-- The `EASY`, `MEDIUM`, `HARD` levels and `gap_score` are exposed through the API but currently do not change `is_valid()` or `score()`.
+- `score()` returns `std::int64_t`: the sum of bonuses and negative penalties; higher is better. Every overlapping pair in a room adds `overlap_penalty`, which defaults to **−10000**. Nested intervals and equal start times are fully counted, and insertion order does not affect the score.
+- Each free gap in a room **strictly longer** than `gap_duration` earns one `gap_score`: by default, **+5** for a gap longer than **15 minutes**. With overlapping entries, the gap starts at the latest end time. A long gap, including one across midnight, still earns one bonus; entries in different rooms do not earn a shared gap bonus.
+- `is_valid()` compares `score()` with the selected level's minimum score. Defaults are **0** for `HARD`, **−5000** for `MEDIUM`, and **−10000** for `EASY`. Equality is accepted, and bonuses can compensate for penalties. Empty schedules score `0` and are also checked against the threshold.
+- An unrepresentable interval end or overflow while accumulating the score throws `std::overflow_error` from `score()` and `is_valid()`.
 - `get_entry()` returns a reference into the manager. Keep the manager alive and do not retain the reference across additions that may reallocate its vector; copy when needed: `auto entry = schedule.get_entry("Math");`.
+
+### Configure score
+
+| Parameter | Default | Read and update |
+| --- | --- | --- |
+| Gap bonus | `5` | `get_gap_score()`, `update_gap_score(value)`; must be nonnegative. |
+| Minimum gap duration | `std::chrono::minutes{15}` | `get_gap_duration()`, `update_gap_duration(value)`; must be nonnegative and representable in seconds. |
+| Penalty per overlapping pair | `-10000` | `get_overlap_penalty()`, `update_overlap_penalty(value)`; must be nonpositive. |
+| EASY, MEDIUM, HARD thresholds | `-10000`, `-5000`, `0` | `update_min_scores(easy, medium, hard)`; requires `easy <= medium <= hard`. `get_min_score()` returns the selected level's threshold. |
+| Level | `"MEDIUM"` | `get_validating_level()`, `set_validating_level("EASY" / "MEDIUM" / "HARD")`. |
+
+All score values and thresholds use `std::int64_t`. A zero bonus or penalty disables that contribution. Invalid settings throw `std::invalid_argument` and preserve the previous value.
+
+```cpp
+Validator validator{schedule};
+validator.update_gap_duration(std::chrono::minutes{20});
+validator.update_gap_score(10);
+validator.update_overlap_penalty(-100);
+validator.update_min_scores(-100, -50, 0);
+validator.set_validating_level("HARD");
+
+std::cout << "Score: " << validator.score()
+          << ", required: " << validator.get_min_score()
+          << ", valid: " << std::boolalpha << validator.is_valid() << '\n';
+```
 
 ### Tests
 
-[tests/CMakeTests.cpp](tests/CMakeTests.cpp) contains a small custom runner with 32 cases covering entries, managers, exceptions, ownership, and time conflicts. CTest sees these as **one** test named `CMakeTests`; the internal runner prints the case count.
+[tests/CMakeTests.cpp](tests/CMakeTests.cpp) contains a small custom runner with 48 cases covering entries, managers, exceptions, ownership, bonuses, penalties, level thresholds, and time and score boundaries. CTest sees these as **one** test named `CMakeTests`; the internal runner prints the case count.
 
 Run after configuring with `BUILD_TESTING=ON`:
 
@@ -415,13 +469,13 @@ cmake --build build --config Debug --target CMakeTests --parallel 2
 ctest --test-dir build -C Debug --tests-regex "^CMakeTests$" --verbose --output-on-failure --no-tests=error
 ```
 
-For the current suite, expect `32/32 cases passed`, no `FAIL` messages, and exit code zero. `--no-tests=error` prevents a false success when no test is registered. For failures, inspect the file, line, and expression in the message, and `build/Testing/Temporary/LastTest.log`.
+For the current suite, expect `48/48 cases passed`, no `FAIL` messages, and exit code zero. `--no-tests=error` prevents a false success when no test is registered. For failures, inspect the file, line, and expression in the message, and `build/Testing/Temporary/LastTest.log`.
 
 ### Preparing a Pull Request
 
 1. Fork and clone the repository, then create a dedicated branch, for example `git switch -c fix/room-conflict`. A fork is optional if you have direct repository access.
 2. Keep the change focused. For a bug fix, add a case reproducing the failure; for new API, cover ordinary behavior, boundaries, and exceptions.
-3. Add the test function and its registration in `test::run(...)` in `tests/CMakeTests.cpp`. If the case count changes, update the runner's final argument (currently `32`) and the step label in `.github/workflows/tests.yml`; update the README where needed. The runner deliberately fails if its expected count differs from the registered list.
+3. Add the test function and its registration in `test::run(...)` in `tests/CMakeTests.cpp`. If the case count changes, update the runner's final argument (currently `48`) and the step label in `.github/workflows/tests.yml`; update the README where needed. The runner deliberately fails if its expected count differs from the registered list.
 4. Run the tests and LLVM checks below. For behavior changes, check Debug/Release with `BUILD_SHARED_LIBS=OFF/ON`. CI repeats this matrix on both operating systems.
 5. Run `git diff --check` and inspect the diff before pushing. Follow `.clang-format`; exclude build directories, binaries, and IDE settings from the PR.
 6. Describe the problem, resulting behavior, public API changes, and validation commands with results. Distinguish completed checks from skipped checks. After pushing, check both GitHub workflows and address failures before requesting review.
@@ -492,7 +546,7 @@ Not run: <skipped checks and reasons>
 
 ### Benchmark and CLion
 
-The benchmark uses Windows APIs and `Psapi`; disable it on Linux. It measures creation and validation of 1000 entries over 50 repetitions and reports time and memory. It does not replace functional tests and is not part of CI.
+The benchmark uses Windows APIs and `Psapi`; disable it on Linux. It measures creation of 1000 entries and, separately, manager population, validator copying, and `score()` over 50 repetitions. Scoring has two scenarios: all entries overlap, or entries are separated by 16-minute gaps. Each repetition checks the expected score (**−4995000000** and **4995**) and validity outside the timed section. It reports time and memory, does not replace functional tests, and is not part of CI.
 
 On Windows, in PowerShell:
 

@@ -3,9 +3,11 @@
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <exception>
 #include <initializer_list>
 #include <iostream>
+#include <limits>
 #include <source_location>
 #include <stdexcept>
 #include <string>
@@ -308,11 +310,16 @@ void validating_levels_accept_only_known_names() {
 }
 
 void gap_score_can_be_updated() {
-    Validator validator;
+    Validator validator{ScheduleManager{std::vector{test::entry("First"), test::entry("Second", 46)}}};
     CHECK(validator.get_gap_score() == 5);
+    CHECK(validator.score() == 5);
     validator.update_gap_score(17);
     CHECK(validator.get_gap_score() == 17);
+    CHECK(validator.score() == 17);
     validator.update_gap_score(0);
+    CHECK(validator.get_gap_score() == 0);
+    CHECK(validator.score() == 0);
+    test::expect_throws<std::invalid_argument>([&] { validator.update_gap_score(-1); });
     CHECK(validator.get_gap_score() == 0);
 }
 
@@ -327,7 +334,7 @@ void touching_and_separated_entries_are_valid_in_any_order() {
     for (int order = 0; order < 3; ++order) {
         const Validator validator{ScheduleManager{entries}};
         CHECK(validator.is_valid());
-        CHECK(validator.score() == 0);
+        CHECK(validator.score() == 5);
         std::rotate(entries.begin(), entries.begin() + 1, entries.end());
     }
 }
@@ -337,7 +344,7 @@ void overlapping_entries_have_a_penalty_in_either_order() {
     for (int order = 0; order < 2; ++order) {
         const Validator validator{ScheduleManager{entries}};
         CHECK(!validator.is_valid());
-        CHECK(validator.score() == 10000);
+        CHECK(validator.score() == -10000);
         std::reverse(entries.begin(), entries.end());
     }
 }
@@ -345,13 +352,14 @@ void overlapping_entries_have_a_penalty_in_either_order() {
 void identical_start_times_conflict() {
     const Validator validator{ScheduleManager{std::vector{test::entry("First"), test::entry("Second", 0, 1)}}};
     CHECK(!validator.is_valid());
-    CHECK(validator.score() == 10000);
+    CHECK(validator.score() == -10000);
 }
 
 void nested_intervals_conflict() {
     const Validator validator{ScheduleManager{
         std::vector{test::entry("Outer", 0, 180), test::entry("Inner", 30, 15), test::entry("Later", 90, 15)}}};
     CHECK(!validator.is_valid());
+    CHECK(validator.score() == -20000);
 }
 
 void simultaneous_entries_in_different_rooms_are_valid() {
@@ -369,16 +377,16 @@ void room_conflicts_are_detected_across_managers_and_groups() {
     appended.add_manager(first);
     appended.add_managers(std::vector{second});
     CHECK(!constructed.is_valid());
-    CHECK(constructed.score() == 10000);
+    CHECK(constructed.score() == -10000);
     CHECK(!appended.is_valid());
-    CHECK(appended.score() == 10000);
+    CHECK(appended.score() == -10000);
 }
 
 void different_dates_do_not_conflict_at_same_clock_time() {
     const Validator validator{
         ScheduleManager{std::vector{test::entry("Today", 600, 45), test::entry("Tomorrow", 2040, 45)}}};
     CHECK(validator.is_valid());
-    CHECK(validator.score() == 0);
+    CHECK(validator.score() == 5);
 }
 
 void overnight_intervals_conflict_with_the_next_day() {
@@ -387,7 +395,7 @@ void overnight_intervals_conflict_with_the_next_day() {
     const Validator touching{
         ScheduleManager{std::vector{test::entry("Overnight", 1430, 30), test::entry("Next day", 1460, 30)}}};
     CHECK(!overlap.is_valid());
-    CHECK(overlap.score() == 10000);
+    CHECK(overlap.score() == -10000);
     CHECK(touching.is_valid());
     CHECK(touching.score() == 0);
 }
@@ -399,7 +407,7 @@ void seconds_are_retained_when_checking_endpoints() {
     second.set_timestamp(second.get_timestamp() + std::chrono::seconds{29});
     const Validator overlap{ScheduleManager{std::vector{first, second}}};
     CHECK(!overlap.is_valid());
-    CHECK(overlap.score() == 10000);
+    CHECK(overlap.score() == -10000);
     second.set_timestamp(second.get_timestamp() + std::chrono::seconds{1});
     const Validator touching{ScheduleManager{std::vector{first, second}}};
     CHECK(touching.is_valid());
@@ -412,8 +420,7 @@ void penalties_accumulate_across_independent_conflicts() {
                                     test::entry("B1", 0, 45, "Room B"), test::entry("B2", 30, 45, "Room B"),
                                     test::entry("A3", 120, 45, "Room A"), test::entry("A4", 150, 45, "Room A")}}};
     CHECK(!validator.is_valid());
-    CHECK(validator.score() == 30000);
-    CHECK(validator.score() == 30000);
+    CHECK(validator.score() == -29995);
 }
 
 void validator_keeps_a_copy_of_added_managers() {
@@ -423,6 +430,197 @@ void validator_keeps_a_copy_of_added_managers() {
     CHECK(snapshot.is_valid());
     CHECK(snapshot.score() == 0);
     CHECK(!Validator{manager}.is_valid());
+}
+
+void gaps_require_more_than_fifteen_minutes() {
+    for (const int start : {44, 45, 46}) {
+        const Validator validator{ScheduleManager{std::vector{test::entry("First"), test::entry("Second", start)}}};
+        CHECK(validator.score() == (start == 46 ? 5 : 0));
+    }
+}
+
+void gap_boundaries_retain_seconds() {
+    auto second = test::entry("Second", 45);
+    const Validator exact{ScheduleManager{std::vector{test::entry("First"), second}}};
+    CHECK(exact.score() == 0);
+    second.set_timestamp(second.get_timestamp() + seconds{1});
+    const Validator longer{ScheduleManager{std::vector{test::entry("First"), second}}};
+    CHECK(longer.score() == 5);
+}
+
+void gaps_use_the_latest_end_of_overlapping_entries() {
+    const Validator short_gap{ScheduleManager{
+        std::vector{test::entry("Outer", 0, 180), test::entry("Inner", 30, 15), test::entry("Later", 190, 10)}}};
+    const Validator long_gap{ScheduleManager{
+        std::vector{test::entry("Outer", 0, 180), test::entry("Inner", 30, 15), test::entry("Later", 196, 10)}}};
+    CHECK(short_gap.score() == -10000);
+    CHECK(long_gap.score() == -9995);
+}
+
+void score_is_independent_of_entry_order() {
+    std::vector entries{test::entry("A", 0, 180), test::entry("B", 0, 15), test::entry("C", 30, 15),
+                        test::entry("D", 200, 10)};
+    do {
+        const Validator validator{ScheduleManager{entries}};
+        CHECK(validator.score() == -19995);
+    } while (std::ranges::next_permutation(entries, {}, [](const auto &entry) { return entry.get_name(); }).found);
+}
+
+void chained_overlaps_do_not_create_gap_bonuses() {
+    const Validator validator{ScheduleManager{std::vector{test::entry("A", 0, 60), test::entry("B", 30, 60),
+                                                          test::entry("C", 70, 20), test::entry("D", 106, 10)}}};
+    CHECK(validator.score() == -19995);
+}
+
+void score_can_exceed_the_int_range() {
+    std::vector<ScheduleEntry> entries;
+    for (int i = 0; i < 1000; ++i) {
+        entries.push_back(test::entry(std::to_string(i)));
+    }
+    const Validator validator{ScheduleManager{entries}};
+    CHECK(validator.score() == -4'995'000'000LL);
+}
+
+void validating_levels_use_score_thresholds() {
+    Validator validator{ScheduleManager{std::vector{test::entry("A"), test::entry("B", 15), test::entry("C", 61)}}};
+    validator.update_gap_score(5000);
+    CHECK(validator.score() == -5000);
+    validator.set_validating_level("HARD");
+    CHECK(!validator.is_valid());
+    validator.set_validating_level("MEDIUM");
+    CHECK(validator.is_valid());
+    validator.update_gap_score(4999);
+    CHECK(!validator.is_valid());
+    validator.set_validating_level("EASY");
+    CHECK(validator.is_valid());
+    validator.update_gap_score(10000);
+    validator.set_validating_level("HARD");
+    CHECK(validator.score() == 0);
+    CHECK(validator.is_valid());
+}
+
+void easy_accepts_a_score_at_its_threshold() {
+    Validator validator{ScheduleManager{std::vector{test::entry("A"), test::entry("B", 15)}}};
+    validator.set_validating_level("EASY");
+    CHECK(validator.is_valid());
+    CHECK(validator.score() == -10000);
+    validator.add_manager(ScheduleManager{std::vector{test::entry("C")}});
+    CHECK(!validator.is_valid());
+}
+
+void scoring_rejects_unrepresentable_interval_ends() {
+    const ScheduleEntry entry{"Late", sys_seconds::max(), minutes{1}, "Group", "Room"};
+    const Validator validator{ScheduleManager{std::vector{entry}}};
+    test::expect_throws<std::overflow_error>([&] { validator.score(); });
+    test::expect_throws<std::overflow_error>([&] { validator.is_valid(); });
+}
+
+void gaps_support_extreme_timestamps() {
+    const ScheduleEntry first{"First", sys_seconds::min(), minutes{1}, "Group", "Room"};
+    const ScheduleEntry second{"Second", sys_seconds::max() - minutes{1}, minutes{1}, "Group", "Room"};
+    const Validator wide{ScheduleManager{std::vector{first, second}}};
+    CHECK(wide.score() == 5);
+    const ScheduleEntry near_end{"Near end", sys_seconds::max() - minutes{3}, minutes{1}, "Group", "Room"};
+    const Validator short_gap{ScheduleManager{std::vector{near_end, second}}};
+    CHECK(short_gap.score() == 0);
+}
+
+void gap_duration_changes_the_bonus_boundary() {
+    Validator validator{ScheduleManager{std::vector{test::entry("First"), test::entry("Second", 46)}}};
+    CHECK(validator.get_gap_duration() == minutes{15});
+    validator.update_gap_duration(minutes{16});
+    CHECK(validator.score() == 0);
+    validator.update_gap_duration(minutes{15});
+    CHECK(validator.score() == 5);
+    validator.update_gap_duration(minutes{0});
+    CHECK(validator.score() == 5);
+    const Validator touching{ScheduleManager{std::vector{test::entry("First"), test::entry("Second", 30)}}};
+    auto no_gap = touching;
+    no_gap.update_gap_duration(minutes{0});
+    CHECK(no_gap.score() == 0);
+    test::expect_throws<std::invalid_argument>([&] { validator.update_gap_duration(minutes{-1}); });
+    CHECK(validator.get_gap_duration() == minutes{0});
+    test::expect_throws<std::invalid_argument>([&] { validator.update_gap_duration(minutes::max()); });
+    CHECK(validator.get_gap_duration() == minutes{0});
+    validator.update_gap_duration(duration_cast<minutes>(seconds::max()));
+    CHECK(validator.score() == 0);
+}
+
+void overlap_penalty_can_be_changed_or_disabled() {
+    Validator validator{ScheduleManager{std::vector{test::entry("First"), test::entry("Second")}}};
+    CHECK(validator.get_overlap_penalty() == -10000);
+    validator.update_overlap_penalty(-20);
+    CHECK(validator.score() == -20);
+    validator.update_overlap_penalty(0);
+    CHECK(validator.score() == 0);
+    validator.set_validating_level("HARD");
+    CHECK(validator.is_valid());
+    test::expect_throws<std::invalid_argument>([&] { validator.update_overlap_penalty(1); });
+    CHECK(validator.get_overlap_penalty() == 0);
+}
+
+void custom_min_scores_control_each_level() {
+    Validator validator{ScheduleManager{std::vector{test::entry("First"), test::entry("Second")}}};
+    validator.update_overlap_penalty(-20);
+    validator.update_min_scores(-30, -20, -10);
+    validator.set_validating_level("HARD");
+    CHECK(validator.get_min_score() == -10);
+    CHECK(!validator.is_valid());
+    validator.set_validating_level("MEDIUM");
+    CHECK(validator.get_min_score() == -20);
+    CHECK(validator.is_valid());
+    validator.set_validating_level("EASY");
+    CHECK(validator.get_min_score() == -30);
+    CHECK(validator.is_valid());
+    test::expect_throws<std::invalid_argument>([&] { validator.update_min_scores(-10, -20, 0); });
+    test::expect_throws<std::invalid_argument>([&] { validator.update_min_scores(-30, -10, -20); });
+    CHECK(validator.get_min_score() == -30);
+    validator.set_validating_level("MEDIUM");
+    CHECK(validator.get_min_score() == -20);
+    validator.set_validating_level("HARD");
+    CHECK(validator.get_min_score() == -10);
+    validator.update_min_scores(-20, -20, -20);
+    CHECK(validator.is_valid());
+}
+
+void empty_schedules_use_custom_min_scores() {
+    Validator validator;
+    validator.update_min_scores(1, 2, 3);
+    for (const std::string level : {"EASY", "MEDIUM", "HARD"}) {
+        validator.set_validating_level(level);
+        CHECK(!validator.is_valid());
+        CHECK(validator.score() == 0);
+    }
+    validator.update_min_scores(std::numeric_limits<std::int64_t>::min(), 0, std::numeric_limits<std::int64_t>::max());
+    CHECK(!validator.is_valid());
+    validator.set_validating_level("MEDIUM");
+    CHECK(validator.is_valid());
+    validator.set_validating_level("EASY");
+    CHECK(validator.is_valid());
+}
+
+void gap_bonuses_accumulate_across_rooms_and_managers() {
+    const ScheduleManager first{std::vector{test::entry("A1", 0, 30, "Room A"), test::entry("B1", 0, 30, "Room B")}};
+    const ScheduleManager second{
+        std::vector{test::entry("A2", 46, 30, "Room A", "Group B"), test::entry("B2", 46, 30, "Room B", "Group B")}};
+    const Validator validator{std::vector{first, second}};
+    CHECK(validator.score() == 10);
+}
+
+void score_limits_are_checked() {
+    Validator gaps{ScheduleManager{std::vector{test::entry("First"), test::entry("Second", 46)}}};
+    gaps.update_gap_score(std::numeric_limits<std::int64_t>::max());
+    CHECK(gaps.score() == std::numeric_limits<std::int64_t>::max());
+    gaps.add_manager(ScheduleManager{std::vector{test::entry("Third", 92)}});
+    test::expect_throws<std::overflow_error>([&] { gaps.score(); });
+    test::expect_throws<std::overflow_error>([&] { gaps.is_valid(); });
+
+    Validator overlaps{ScheduleManager{std::vector{test::entry("First"), test::entry("Second")}}};
+    overlaps.update_overlap_penalty(std::numeric_limits<std::int64_t>::min());
+    CHECK(overlaps.score() == std::numeric_limits<std::int64_t>::min());
+    overlaps.add_manager(ScheduleManager{std::vector{test::entry("Third")}});
+    test::expect_throws<std::overflow_error>([&] { overlaps.score(); });
+    test::expect_throws<std::overflow_error>([&] { overlaps.is_valid(); });
 }
 
 } // namespace
@@ -467,6 +665,22 @@ int main() {
             {"Validator / seconds are retained at endpoints", seconds_are_retained_when_checking_endpoints},
             {"Validator / penalties accumulate independently", penalties_accumulate_across_independent_conflicts},
             {"Validator / validator keeps a manager snapshot", validator_keeps_a_copy_of_added_managers},
+            {"Validator / gaps require more than fifteen minutes", gaps_require_more_than_fifteen_minutes},
+            {"Validator / gap boundaries retain seconds", gap_boundaries_retain_seconds},
+            {"Validator / gaps use the latest occupied end", gaps_use_the_latest_end_of_overlapping_entries},
+            {"Validator / score is independent of entry order", score_is_independent_of_entry_order},
+            {"Validator / chained overlaps do not create bonuses", chained_overlaps_do_not_create_gap_bonuses},
+            {"Validator / score exceeds the int range", score_can_exceed_the_int_range},
+            {"Validator / levels use score thresholds", validating_levels_use_score_thresholds},
+            {"Validator / easy accepts its exact threshold", easy_accepts_a_score_at_its_threshold},
+            {"Validator / scoring rejects overflowing ends", scoring_rejects_unrepresentable_interval_ends},
+            {"Validator / gaps support extreme timestamps", gaps_support_extreme_timestamps},
+            {"Validator / gap duration changes the boundary", gap_duration_changes_the_bonus_boundary},
+            {"Validator / overlap penalty can be changed", overlap_penalty_can_be_changed_or_disabled},
+            {"Validator / custom minimum scores control each level", custom_min_scores_control_each_level},
+            {"Validator / empty schedules use custom minimum scores", empty_schedules_use_custom_min_scores},
+            {"Validator / bonuses span rooms and managers", gap_bonuses_accumulate_across_rooms_and_managers},
+            {"Validator / score limits are checked", score_limits_are_checked},
         },
-        32);
+        48);
 }

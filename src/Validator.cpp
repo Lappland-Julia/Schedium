@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <ranges>
 #include <stdexcept>
+#include <limits>
 
 std::map<std::string, std::vector<std::pair<std::chrono::sys_seconds, std::chrono::minutes>>>
 Validator::get_schedule_entries() const {
@@ -15,6 +16,51 @@ Validator::get_schedule_entries() const {
         }
     }
     return schedule_entries;
+}
+
+void Validator::update_gap_score(const std::int64_t &new_gap_score) {
+    if (new_gap_score < 0) {
+        throw std::invalid_argument("Gap score must not be negative");
+    }
+    this->gap_score = new_gap_score;
+}
+
+void Validator::update_gap_duration(const std::chrono::minutes &new_gap_duration) {
+    if (new_gap_duration < std::chrono::minutes{0} ||
+        new_gap_duration > std::chrono::duration_cast<std::chrono::minutes>(std::chrono::seconds::max())) {
+        throw std::invalid_argument("Gap duration is outside the supported range");
+    }
+    this->gap_duration = new_gap_duration;
+}
+
+void Validator::update_overlap_penalty(const std::int64_t &new_overlap_penalty) {
+    if (new_overlap_penalty > 0) {
+        throw std::invalid_argument("Overlap penalty must not be positive");
+    }
+    this->overlap_penalty = new_overlap_penalty;
+}
+
+std::int64_t Validator::get_min_score() const {
+    switch (this->validating_level) {
+        case 1:
+            return this->easy_min_score;
+        case 2:
+            return this->medium_min_score;
+        case 3:
+            return this->hard_min_score;
+        default:
+            throw std::invalid_argument("Invalid validating level");
+    }
+}
+
+void Validator::update_min_scores(const std::int64_t &new_easy_min_score, const std::int64_t &new_medium_min_score,
+                                  const std::int64_t &new_hard_min_score) {
+    if (new_easy_min_score > new_medium_min_score || new_medium_min_score > new_hard_min_score) {
+        throw std::invalid_argument("Minimum scores must follow EASY <= MEDIUM <= HARD");
+    }
+    this->easy_min_score = new_easy_min_score;
+    this->medium_min_score = new_medium_min_score;
+    this->hard_min_score = new_hard_min_score;
 }
 
 std::string Validator::get_validating_level() const {
@@ -68,30 +114,12 @@ Validator::Validator(const std::vector<ScheduleManager> &schedule_managers) {
 }
 
 bool Validator::is_valid() const {
-    if (managers.empty()) {
-        return true;
-    }
-
-    for (auto schedule_entries = get_schedule_entries(); auto &entries : schedule_entries | std::views::values) {
-        std::ranges::sort(entries, {}, [](const auto &entry) { return entry.first; });
-
-        for (std::size_t i = 1; i < entries.size(); ++i) {
-            const auto &[previous_start, previous_duration] = entries[i - 1];
-            const auto current_start = entries[i].first;
-
-            const auto previous_end = previous_start + previous_duration;
-
-            if (current_start < previous_end) {
-                return false;
-            }
-        }
-    }
-
-    return true;
+    return this->score() >= this->get_min_score();
 }
 
-int Validator::score() const {
-    int schedule_score = 0;
+std::int64_t Validator::score() const {
+    std::int64_t schedule_score = 0;
+    const auto gap_seconds = std::chrono::duration_cast<std::chrono::seconds>(this->gap_duration);
 
     if (managers.empty()) {
         return schedule_score;
@@ -100,14 +128,34 @@ int Validator::score() const {
     for (auto schedule_entries = get_schedule_entries(); auto &entries : schedule_entries | std::views::values) {
         std::ranges::sort(entries, {}, [](const auto &entry) { return entry.first; });
 
-        for (std::size_t i = 1; i < entries.size(); ++i) {
-            const auto &[previous_start, previous_duration] = entries[i - 1];
-            const auto current_start = entries[i].first;
+        auto latest_end = std::chrono::sys_seconds{};
+        for (std::size_t i = 0; i < entries.size(); ++i) {
+            const auto &[current_start, current_duration] = entries[i];
+            if (current_start > std::chrono::sys_seconds::max() - current_duration) {
+                throw std::overflow_error("Entry end is outside the timestamp range");
+            }
+            const auto current_end = current_start + current_duration;
 
-            const auto previous_end = previous_start + previous_duration;
+            if (i > 0 && latest_end <= std::chrono::sys_seconds::max() - gap_seconds &&
+                current_start > latest_end + gap_seconds) {
+                if (schedule_score > std::numeric_limits<std::int64_t>::max() - this->gap_score) {
+                    throw std::overflow_error("Schedule score is outside the supported range");
+                }
+                schedule_score += this->gap_score;
+            }
 
-            if (current_start < previous_end) {
-                schedule_score -= this->overlap_penalty;
+            for (std::size_t j = i + 1; j < entries.size(); ++j) {
+                if (entries[j].first >= current_end) {
+                    break;
+                }
+                if (schedule_score < std::numeric_limits<std::int64_t>::min() - this->overlap_penalty) {
+                    throw std::overflow_error("Schedule score is outside the supported range");
+                }
+                schedule_score += this->overlap_penalty;
+            }
+
+            if (i == 0 || current_end > latest_end) {
+                latest_end = current_end;
             }
         }
     }

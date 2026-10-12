@@ -31,7 +31,7 @@ jobs:
       - name: Build CMakeTests
         run: cmake --build build --config ${{ matrix.build_type }} --target CMakeTests --parallel 2
 
-      - name: Require all 32 CMakeTests cases to pass
+      - name: Require all 48 CMakeTests cases to pass
         run: >-
           ctest --test-dir build -C ${{ matrix.build_type }}
           --tests-regex "^CMakeTests$" --verbose --output-on-failure --no-tests=error
